@@ -19,6 +19,14 @@
   input { width:100%; background:#05060a; color:var(--text);
           border:1px solid #2a3145; border-radius:8px; padding:10px; font:inherit; font-size:.9rem; }
   input:focus { outline:none; border-color:var(--neon); }
+  .pw-wrap { position:relative; }
+  .pw-wrap input { padding-right:46px; }
+  .pw-toggle {
+    position:absolute; right:10px; top:50%; transform:translateY(-50%);
+    cursor:pointer; font-size:.62rem; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--dim); user-select:none;
+  }
+  .pw-toggle:hover { color:var(--text); }
   button { width:100%; margin-top:20px; background:transparent; color:var(--neon);
            border:1px solid var(--neon); border-radius:8px; padding:11px; font:inherit;
            font-weight:bold; letter-spacing:.12em; cursor:pointer; transition:.15s; }
@@ -41,7 +49,10 @@
       <input id="username" type="text" placeholder="your username" autocomplete="username">
 
       <label for="password">Password</label>
-      <input id="password" type="password" placeholder="your password" autocomplete="current-password">
+      <div class="pw-wrap">
+        <input id="password" type="password" placeholder="your password" autocomplete="current-password">
+        <span class="pw-toggle" data-target="password">show</span>
+      </div>
 
       <button type="submit" id="submitBtn">LOG IN</button>
     </form>
@@ -84,6 +95,16 @@
         show('Error: ' + (err.code || err.message));
       }
     }
+  });
+
+  // Show / hide password toggle
+  document.querySelectorAll('.pw-toggle').forEach(t => {
+    t.addEventListener('click', () => {
+      const inp = document.getElementById(t.dataset.target);
+      const showing = inp.type === 'password';
+      inp.type = showing ? 'text' : 'password';
+      t.textContent = showing ? 'hide' : 'show';
+    });
   });
 </script>
 </body>
