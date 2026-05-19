@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Account · Viyanajith</title>
+<style>
+  :root { --bg:#05060a; --panel:#10131c; --neon:#00f0ff; --pink:#ff3df0; --lime:#7dff8a; --text:#e6e6e6; --dim:#7c8599; }
+  * { box-sizing:border-box; }
+  body { margin:0; min-height:100vh; background:var(--bg); color:var(--text);
+         font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+         display:flex; flex-direction:column; align-items:center; padding:32px 24px; }
+  .card { background:var(--panel); border:1px solid #1f2433; border-radius:14px;
+          padding:28px; width:100%; max-width:520px; }
+  .head { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+  h1 { color:var(--neon); letter-spacing:.16em; font-size:1.15rem; margin:0; }
+  .who { color:var(--lime); font-size:.85rem; }
+  .sub { color:var(--dim); font-size:.75rem; margin-bottom:18px; }
+  label { display:block; color:var(--dim); font-size:.7rem; text-transform:uppercase;
+          letter-spacing:.1em; margin:14px 0 6px; }
+  textarea { width:100%; min-height:160px; resize:vertical; background:#05060a;
+             color:var(--text); border:1px solid #2a3145; border-radius:8px;
+             padding:10px; font:inherit; font-size:.9rem; }
+  textarea:focus { outline:none; border-color:var(--neon); }
+  .usage { margin-top:8px; font-size:.75rem; color:var(--dim); }
+  .usage b { color:var(--lime); }
+  .btns { display:flex; gap:10px; margin-top:16px; }
+  button { flex:1; background:transparent; border-radius:8px; padding:10px; font:inherit;
+           font-weight:bold; letter-spacing:.1em; cursor:pointer; transition:.15s; }
+  button:disabled { opacity:.5; cursor:not-allowed; }
+  .save  { color:var(--neon); border:1px solid var(--neon); }
+  .save:hover:not(:disabled)  { background:var(--neon); color:#000; box-shadow:0 0 12px var(--neon); }
+  .clear { color:var(--pink); border:1px solid var(--pink); }
+  .clear:hover:not(:disabled) { background:var(--pink); color:#000; box-shadow:0 0 12px var(--pink); }
+  .logout { margin-top:10px; width:100%; color:var(--dim); border:1px solid #2a3145; }
+  .logout:hover { border-color:var(--dim); color:var(--text); }
+  #msg { margin-top:14px; font-size:.78rem; text-align:center; color:var(--pink); min-height:1em; }
+  #msg.ok { color:var(--neon); }
+  #loading { color:var(--dim); font-size:.85rem; }
+</style>
+</head>
+<body>
+  <div class="card" id="card" style="display:none">
+    <div class="head">
+      <h1>MY ACCOUNT</h1>
+      <span class="who" id="who"></span>
+    </div>
+    <div class="sub">Your private storage. Only you can see this.</div>
+
+    <label for="data">Your data</label>
+    <textarea id="data" placeholder="Type anything — it saves to your account…"></textarea>
+    <div class="usage">Storage used: <b id="usage">0 B</b></div>
+
+    <div class="btns">
+      <button class="save"  id="saveBtn">SAVE</button>
+      <button class="clear" id="clearBtn">CLEAR</button>
+    </div>
+    <button class="logout" id="logoutBtn">LOG OUT</button>
+
+    <div id="msg"></div>
+  </div>
+
+  <div id="loading">Checking login…</div>
+
+<script type="module">
+  import { auth, db } from "./firebase-init.js";
+  import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+  import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+  const $ = id => document.getElementById(id);
+  const msg = $('msg');
+  function show(text, ok = false) { msg.textContent = text; msg.className = ok ? 'ok' : ''; }
+
+  let userRef = null;  // this user's Firestore document
+
+  // Show how many bytes the text in the box would take.
+  function updateUsage() {
+    const bytes = new Blob([$('data').value]).size;
+    $('usage').textContent = bytes < 1024
+      ? bytes + ' B'
+      : (bytes / 1024).toFixed(2) + ' KB';
+  }
+  $('data').addEventListener('input', updateUsage);
+
+  // Gatekeeper: if not logged in, bounce to the login page.
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) { window.location.href = 'login.html'; return; }
+
+    userRef = doc(db, 'users', user.uid);
+    let info = {};
+    try {
+      const snap = await getDoc(userRef);
+      if (snap.exists()) info = snap.data();
+    } catch (err) {
+      show('Could not load your data: ' + (err.code || err.message));
+    }
+    $('who').textContent = '@' + (info.username || 'you');
+    $('data').value = info.data || '';
+    updateUsage();
+
+    $('loading').style.display = 'none';
+    $('card').style.display = 'block';
+  });
+
+  $('saveBtn').addEventListener('click', async () => {
+    if (!userRef) return;
+    $('saveBtn').disabled = true;
+    show('Saving…', true);
+    try {
+      await setDoc(userRef, { data: $('data').value }, { merge: true });
+      show('Saved ✓', true);
+    } catch (err) {
+      show('Save failed: ' + (err.code || err.message));
+    }
+    $('saveBtn').disabled = false;
+  });
+
+  $('clearBtn').addEventListener('click', async () => {
+    if (!userRef) return;
+    if (!confirm('Clear all your saved data? This cannot be undone.')) return;
+    $('clearBtn').disabled = true;
+    try {
+      await setDoc(userRef, { data: '' }, { merge: true });
+      $('data').value = '';
+      updateUsage();
+      show('Your data was cleared.', true);
+    } catch (err) {
+      show('Clear failed: ' + (err.code || err.message));
+    }
+    $('clearBtn').disabled = false;
+  });
+
+  $('logoutBtn').addEventListener('click', async () => {
+    await signOut(auth);
+    window.location.href = '../index.html';
+  });
+</script>
+</body>
+</html>

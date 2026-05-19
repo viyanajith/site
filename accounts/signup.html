@@ -10,9 +10,6 @@
   body { margin:0; min-height:100vh; background:var(--bg); color:var(--text);
          font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
          display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; }
-  .test-banner { background:rgba(255,61,240,0.12); border:1px dashed var(--pink);
-                 color:var(--pink); font-size:.72rem; letter-spacing:.1em;
-                 padding:8px 14px; border-radius:6px; margin-bottom:20px; }
   .card { background:var(--panel); border:1px solid #1f2433; border-radius:14px;
           padding:28px; width:100%; max-width:360px; }
   h1 { color:var(--pink); letter-spacing:.18em; font-size:1.2rem; margin:0 0 4px; }
@@ -25,31 +22,31 @@
   button { width:100%; margin-top:20px; background:transparent; color:var(--pink);
            border:1px solid var(--pink); border-radius:8px; padding:11px; font:inherit;
            font-weight:bold; letter-spacing:.12em; cursor:pointer; transition:.15s; }
-  button:hover { background:var(--pink); color:#000; box-shadow:0 0 12px var(--pink); }
+  button:hover:not(:disabled) { background:var(--pink); color:#000; box-shadow:0 0 12px var(--pink); }
+  button:disabled { opacity:.5; cursor:not-allowed; }
   .links { margin-top:16px; font-size:.78rem; text-align:center; color:var(--dim); }
   .links a { color:var(--neon); text-decoration:none; }
   .links a:hover { text-decoration:underline; }
   #msg { margin-top:14px; font-size:.78rem; text-align:center; color:var(--pink); min-height:1em; }
+  #msg.ok { color:var(--neon); }
 </style>
 </head>
 <body>
-  <div class="test-banner">🧪 TEST PAGE — accounts are not wired up yet</div>
-
   <div class="card">
     <h1>SIGN UP</h1>
-    <div class="sub">Create an account. (Test content — nothing is saved.)</div>
+    <div class="sub">Create your account.</div>
 
     <form id="signupForm">
       <label for="username">Username</label>
-      <input id="username" type="text" placeholder="pick a username" autocomplete="username" value="test_user">
+      <input id="username" type="text" placeholder="3-20 letters, numbers, _" autocomplete="username">
 
       <label for="password">Password</label>
-      <input id="password" type="password" placeholder="pick a password" autocomplete="new-password" value="test1234">
+      <input id="password" type="password" placeholder="at least 6 characters" autocomplete="new-password">
 
       <label for="confirm">Confirm Password</label>
-      <input id="confirm" type="password" placeholder="type it again" autocomplete="new-password" value="test1234">
+      <input id="confirm" type="password" placeholder="type it again" autocomplete="new-password">
 
-      <button type="submit">CREATE ACCOUNT</button>
+      <button type="submit" id="submitBtn">CREATE ACCOUNT</button>
     </form>
 
     <div id="msg"></div>
@@ -60,17 +57,45 @@
     </div>
   </div>
 
-<script>
-  // Test placeholder — real Firebase auth will go here later.
-  document.getElementById('signupForm').addEventListener('submit', (e) => {
+<script type="module">
+  import { auth, db, usernameToEmail, USERNAME_RE } from "./firebase-init.js";
+  import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+  import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+  const $ = id => document.getElementById(id);
+  const msg = $('msg');
+  function show(text, ok = false) { msg.textContent = text; msg.className = ok ? 'ok' : ''; }
+
+  $('signupForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const u = document.getElementById('username').value.trim();
-    const p = document.getElementById('password').value;
-    const c = document.getElementById('confirm').value;
-    const msg = document.getElementById('msg');
-    if (!u) { msg.textContent = 'Enter a username.'; return; }
-    if (p !== c) { msg.textContent = 'Passwords do not match.'; return; }
-    msg.textContent = `Test signup for "${u}" — not connected yet.`;
+    const username = $('username').value.trim();
+    const password = $('password').value;
+    const confirm  = $('confirm').value;
+
+    if (!USERNAME_RE.test(username)) {
+      show('Username must be 3-20 letters, numbers or underscores.'); return;
+    }
+    if (password.length < 6) { show('Password must be at least 6 characters.'); return; }
+    if (password !== confirm) { show('Passwords do not match.'); return; }
+
+    $('submitBtn').disabled = true;
+    show('Creating account…', true);
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, usernameToEmail(username), password);
+      // Create this user's private document.
+      await setDoc(doc(db, 'users', cred.user.uid), {
+        username: username,
+        data: '',
+        createdAt: serverTimestamp()
+      });
+      window.location.href = 'account.html';
+    } catch (err) {
+      $('submitBtn').disabled = false;
+      if (err.code === 'auth/email-already-in-use') show('That username is already taken.');
+      else if (err.code === 'auth/weak-password')   show('Password is too weak.');
+      else if (err.code === 'auth/network-request-failed') show('Network error — check your connection.');
+      else show('Error: ' + (err.code || err.message));
+    }
   });
 </script>
 </body>
