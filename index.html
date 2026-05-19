@@ -188,6 +188,35 @@
     box-shadow: 0 0 12px var(--neon);
     transform: rotate(60deg);
   }
+  /* Account buttons — centered in the top bar */
+  .account-nav {
+    position: absolute; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 10px;
+  }
+  .account-btn {
+    background: transparent;
+    border: 1px solid var(--neon);
+    color: var(--neon);
+    padding: 6px 16px;
+    border-radius: 6px;
+    font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase;
+    text-decoration: none; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .account-btn:hover {
+    background: var(--neon); color: #000;
+    box-shadow: 0 0 12px var(--neon);
+  }
+  .account-btn.signup {
+    border-color: var(--neon-pink); color: var(--neon-pink);
+  }
+  .account-btn.signup:hover {
+    background: var(--neon-pink); color: #000;
+    box-shadow: 0 0 12px var(--neon-pink);
+  }
+  @media (max-width: 560px) {
+    .account-nav { position: static; transform: none; }
+  }
 
   /* ====== HERO ====== */
   .hero {
@@ -743,6 +772,10 @@
 <!-- TOP BAR -->
 <div class="top-bar">
   <div class="brand">VIYANAJITH<span class="dot"></span>BLOG</div>
+  <nav class="account-nav">
+    <a class="account-btn login" href="accounts/login.html">Log In</a>
+    <a class="account-btn signup" href="accounts/signup.html">Sign Up</a>
+  </nav>
   <div class="top-right">
     <div class="status"><span class="live"></span>SYSTEM ONLINE</div>
     <button class="gear-btn" id="openSettings" aria-label="Settings">⚙</button>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign Up · Viyanajith</title>
+<style>
+  :root { --bg:#05060a; --panel:#10131c; --neon:#00f0ff; --pink:#ff3df0; --text:#e6e6e6; --dim:#7c8599; }
+  * { box-sizing:border-box; }
+  body { margin:0; min-height:100vh; background:var(--bg); color:var(--text);
+         font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+         display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; }
+  .test-banner { background:rgba(255,61,240,0.12); border:1px dashed var(--pink);
+                 color:var(--pink); font-size:.72rem; letter-spacing:.1em;
+                 padding:8px 14px; border-radius:6px; margin-bottom:20px; }
+  .card { background:var(--panel); border:1px solid #1f2433; border-radius:14px;
+          padding:28px; width:100%; max-width:360px; }
+  h1 { color:var(--pink); letter-spacing:.18em; font-size:1.2rem; margin:0 0 4px; }
+  .sub { color:var(--dim); font-size:.75rem; margin-bottom:20px; }
+  label { display:block; color:var(--dim); font-size:.7rem; text-transform:uppercase;
+          letter-spacing:.1em; margin:14px 0 6px; }
+  input { width:100%; background:#05060a; color:var(--text);
+          border:1px solid #2a3145; border-radius:8px; padding:10px; font:inherit; font-size:.9rem; }
+  input:focus { outline:none; border-color:var(--pink); }
+  button { width:100%; margin-top:20px; background:transparent; color:var(--pink);
+           border:1px solid var(--pink); border-radius:8px; padding:11px; font:inherit;
+           font-weight:bold; letter-spacing:.12em; cursor:pointer; transition:.15s; }
+  button:hover { background:var(--pink); color:#000; box-shadow:0 0 12px var(--pink); }
+  .links { margin-top:16px; font-size:.78rem; text-align:center; color:var(--dim); }
+  .links a { color:var(--neon); text-decoration:none; }
+  .links a:hover { text-decoration:underline; }
+  #msg { margin-top:14px; font-size:.78rem; text-align:center; color:var(--pink); min-height:1em; }
+</style>
+</head>
+<body>
+  <div class="test-banner">🧪 TEST PAGE — accounts are not wired up yet</div>
+
+  <div class="card">
+    <h1>SIGN UP</h1>
+    <div class="sub">Create an account. (Test content — nothing is saved.)</div>
+
+    <form id="signupForm">
+      <label for="username">Username</label>
+      <input id="username" type="text" placeholder="pick a username" autocomplete="username" value="test_user">
+
+      <label for="password">Password</label>
+      <input id="password" type="password" placeholder="pick a password" autocomplete="new-password" value="test1234">
+
+      <label for="confirm">Confirm Password</label>
+      <input id="confirm" type="password" placeholder="type it again" autocomplete="new-password" value="test1234">
+
+      <button type="submit">CREATE ACCOUNT</button>
+    </form>
+
+    <div id="msg"></div>
+
+    <div class="links">
+      Already have an account? <a href="login.html">Log in</a><br>
+      <a href="../index.html">&larr; Back to site</a>
+    </div>
+  </div>
+
+<script>
+  // Test placeholder — real Firebase auth will go here later.
+  document.getElementById('signupForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const u = document.getElementById('username').value.trim();
+    const p = document.getElementById('password').value;
+    const c = document.getElementById('confirm').value;
+    const msg = document.getElementById('msg');
+    if (!u) { msg.textContent = 'Enter a username.'; return; }
+    if (p !== c) { msg.textContent = 'Passwords do not match.'; return; }
+    msg.textContent = `Test signup for "${u}" — not connected yet.`;
+  });
+</script>
+</body>
+</html>
