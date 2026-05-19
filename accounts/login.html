@@ -68,10 +68,15 @@
 <script type="module">
   import { auth, usernameToEmail } from "./firebase-init.js";
   import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+  import { celebrate } from "./particles.js";
 
   const $ = id => document.getElementById(id);
   const msg = $('msg');
   function show(text, ok = false) { msg.textContent = text; msg.className = ok ? 'ok' : ''; }
+
+  // Pre-fill the last username used on this device (instant-login convenience).
+  const saved = localStorage.getItem('vja-account-username');
+  if (saved) { $('username').value = saved; $('password').focus(); }
 
   $('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -83,7 +88,10 @@
     show('Logging in…', true);
     try {
       await signInWithEmailAndPassword(auth, usernameToEmail(username), password);
-      window.location.href = 'account.html';
+      localStorage.setItem('vja-account-username', username);
+      show('Logged in ✓', true);
+      celebrate();
+      setTimeout(() => { window.location.href = 'account.html'; }, 950);
     } catch (err) {
       $('submitBtn').disabled = false;
       if (['auth/invalid-credential', 'auth/wrong-password', 'auth/user-not-found']

@@ -5,11 +5,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>My Account · Viyanajith</title>
 <style>
-  :root { --bg:#05060a; --panel:#10131c; --neon:#00f0ff; --pink:#ff3df0; --lime:#7dff8a; --text:#e6e6e6; --dim:#7c8599; }
+  :root { --bg:#05060a; --panel:#10131c; --neon:#00f0ff; --pink:#ff3df0; --lime:#7dff8a; --amber:#ffd23d; --text:#e6e6e6; --dim:#7c8599; }
   * { box-sizing:border-box; }
   body { margin:0; min-height:100vh; background:var(--bg); color:var(--text);
          font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
          display:flex; flex-direction:column; align-items:center; padding:32px 24px; }
+  .recover-banner {
+    display:none; align-items:center; gap:12px; flex-wrap:wrap; justify-content:center;
+    background:rgba(255,61,240,0.12); border:1px solid var(--pink); color:var(--pink);
+    border-radius:10px; padding:12px 16px; margin-bottom:18px; max-width:520px;
+    width:100%; font-size:.8rem;
+  }
+  .recover-banner button {
+    background:var(--pink); color:#000; border:none; border-radius:6px;
+    padding:7px 14px; font:inherit; font-weight:bold; letter-spacing:.08em; cursor:pointer;
+  }
   .card { background:var(--panel); border:1px solid #1f2433; border-radius:14px;
           padding:28px; width:100%; max-width:520px; }
   .head { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
@@ -22,99 +32,159 @@
              color:var(--text); border:1px solid #2a3145; border-radius:8px;
              padding:10px; font:inherit; font-size:.9rem; }
   textarea:focus { outline:none; border-color:var(--neon); }
-  .usage { margin-top:8px; font-size:.75rem; color:var(--dim); }
+  .usage { margin-top:8px; font-size:.72rem; color:var(--dim); }
   .usage b { color:var(--lime); }
+  #encStatus { color:var(--amber); }
   .btns { display:flex; gap:10px; margin-top:16px; }
   button { flex:1; background:transparent; border-radius:8px; padding:10px; font:inherit;
            font-weight:bold; letter-spacing:.1em; cursor:pointer; transition:.15s; }
   button:disabled { opacity:.5; cursor:not-allowed; }
   .save  { color:var(--neon); border:1px solid var(--neon); }
   .save:hover:not(:disabled)  { background:var(--neon); color:#000; box-shadow:0 0 12px var(--neon); }
-  .clear { color:var(--pink); border:1px solid var(--pink); }
-  .clear:hover:not(:disabled) { background:var(--pink); color:#000; box-shadow:0 0 12px var(--pink); }
+  .clear { color:var(--amber); border:1px solid var(--amber); }
+  .clear:hover:not(:disabled) { background:var(--amber); color:#000; box-shadow:0 0 12px var(--amber); }
   .logout { margin-top:10px; width:100%; color:var(--dim); border:1px solid #2a3145; }
   .logout:hover { border-color:var(--dim); color:var(--text); }
+  .danger { margin-top:22px; padding-top:16px; border-top:1px solid #1f2433;
+            display:flex; align-items:center; gap:12px; }
+  .del { flex:none; width:auto; color:var(--pink); border:1px solid var(--pink); padding:8px 16px; }
+  .del:hover:not(:disabled) { background:var(--pink); color:#000; box-shadow:0 0 12px var(--pink); }
+  .danger-note { font-size:.7rem; color:var(--dim); }
   #msg { margin-top:14px; font-size:.78rem; text-align:center; color:var(--pink); min-height:1em; }
   #msg.ok { color:var(--neon); }
+  .backlink { display:block; margin-top:14px; text-align:center; font-size:.75rem;
+              color:var(--dim); text-decoration:none; }
+  .backlink:hover { color:var(--neon); }
   #loading { color:var(--dim); font-size:.85rem; }
 </style>
 </head>
 <body>
+  <div class="recover-banner" id="recoverBanner">
+    <span id="recoverText">⚠️ This account is scheduled for deletion.</span>
+    <button id="recoverBtn">RECOVER</button>
+  </div>
+
   <div class="card" id="card" style="display:none">
     <div class="head">
       <h1>MY ACCOUNT</h1>
       <span class="who" id="who"></span>
     </div>
-    <div class="sub">Your private storage. Only you can see this.</div>
+    <div class="sub">Your private storage — encoded with your cipher before it's saved.</div>
 
     <label for="data">Your data</label>
     <textarea id="data" placeholder="Type anything — it saves to your account…"></textarea>
-    <div class="usage">Storage used: <b id="usage">0 B</b></div>
+    <div class="usage">Storage used: <b id="usage">0 B</b> &middot; <span id="encStatus">encoder loading…</span></div>
 
     <div class="btns">
-      <button class="save"  id="saveBtn">SAVE</button>
-      <button class="clear" id="clearBtn">CLEAR</button>
+      <button class="save"  id="saveBtn" disabled>SAVE</button>
+      <button class="clear" id="clearBtn" disabled>CLEAR</button>
     </div>
     <button class="logout" id="logoutBtn">LOG OUT</button>
 
+    <div class="danger">
+      <button class="del" id="deleteBtn">DELETE ACCOUNT</button>
+      <span class="danger-note">24-hour recovery window before it's permanent</span>
+    </div>
+
     <div id="msg"></div>
+    <a class="backlink" href="../index.html">&larr; back to site</a>
   </div>
 
   <div id="loading">Checking login…</div>
 
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
 <script type="module">
   import { auth, db } from "./firebase-init.js";
-  import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
-  import { doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+  import { onAuthStateChanged, signOut, deleteUser } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+  import { doc, getDoc, setDoc, deleteDoc, deleteField, serverTimestamp, increment }
+    from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
   const $ = id => document.getElementById(id);
   const msg = $('msg');
   function show(text, ok = false) { msg.textContent = text; msg.className = ok ? 'ok' : ''; }
 
-  let userRef = null;  // this user's Firestore document
+  const RECOVERY_MS = 24 * 60 * 60 * 1000;
+  let userRef = null, currentUser = null, processFn = null, leaving = false;
 
-  // Show how many bytes the text in the box would take.
+  // --- Load Pyodide + the encoder.py cipher ---
+  const pyodideReady = (async () => {
+    try {
+      const pyodide = await loadPyodide();
+      const code = await (await fetch('../encoder.py')).text();
+      pyodide.runPython(code);
+      processFn = pyodide.globals.get('process');
+      $('encStatus').textContent = 'encoder ready ✓';
+    } catch (e) {
+      $('encStatus').textContent = 'encoder failed — refresh the page';
+      console.error('encoder load failed', e);
+    }
+  })();
+
   function updateUsage() {
-    const bytes = new Blob([$('data').value]).size;
-    $('usage').textContent = bytes < 1024
-      ? bytes + ' B'
-      : (bytes / 1024).toFixed(2) + ' KB';
+    const b = new Blob([$('data').value]).size;
+    $('usage').textContent = b < 1024 ? b + ' B' : (b / 1024).toFixed(2) + ' KB';
   }
   $('data').addEventListener('input', updateUsage);
 
-  // Gatekeeper: if not logged in, bounce to the login page.
+  // --- Gatekeeper + load ---
   onAuthStateChanged(auth, async (user) => {
-    if (!user) { window.location.href = 'login.html'; return; }
-
+    if (!user) { if (!leaving) window.location.href = 'login.html'; return; }
+    currentUser = user;
     userRef = doc(db, 'users', user.uid);
+
     let info = {};
     try {
       const snap = await getDoc(userRef);
       if (snap.exists()) info = snap.data();
-    } catch (err) {
-      show('Could not load your data: ' + (err.code || err.message));
+    } catch (err) { show('Could not load your data: ' + (err.code || err.message)); }
+
+    // Deletion / recovery handling
+    if (info.pendingDeletion) {
+      const reqAt = info.deleteRequestedAt ? info.deleteRequestedAt.toMillis() : Date.now();
+      const left = RECOVERY_MS - (Date.now() - reqAt);
+      if (left <= 0) {
+        leaving = true;
+        $('loading').textContent = 'Recovery window passed — deleting account…';
+        try { await deleteDoc(userRef); } catch (e) {}
+        try { await deleteUser(currentUser); } catch (e) {}
+        try { await signOut(auth); } catch (e) {}
+        alert('This account has been permanently deleted.');
+        window.location.href = '../index.html';
+        return;
+      }
+      const hrs = Math.max(1, Math.ceil(left / 3600000));
+      $('recoverText').textContent = '⚠️ This account is scheduled for deletion in ~' + hrs + 'h.';
+      $('recoverBanner').style.display = 'flex';
     }
+
     $('who').textContent = '@' + (info.username || 'you');
-    $('data').value = info.data || '';
+
+    // Decode the stored data once the cipher is ready
+    await pyodideReady;
+    $('data').value = (info.data && processFn) ? processFn(info.data, 'decode') : '';
     updateUsage();
+    if (processFn) { $('saveBtn').disabled = false; $('clearBtn').disabled = false; }
 
     $('loading').style.display = 'none';
     $('card').style.display = 'block';
   });
 
+  // --- Save (encode first) ---
   $('saveBtn').addEventListener('click', async () => {
-    if (!userRef) return;
+    if (!userRef || !processFn) return;
     $('saveBtn').disabled = true;
     show('Saving…', true);
     try {
-      await setDoc(userRef, { data: $('data').value }, { merge: true });
-      show('Saved ✓', true);
+      const encoded = processFn($('data').value, 'encode');
+      await setDoc(userRef, { data: encoded }, { merge: true });
+      show('Saved ✓ (encoded)', true);
     } catch (err) {
       show('Save failed: ' + (err.code || err.message));
     }
     $('saveBtn').disabled = false;
   });
 
+  // --- Clear ---
   $('clearBtn').addEventListener('click', async () => {
     if (!userRef) return;
     if (!confirm('Clear all your saved data? This cannot be undone.')) return;
@@ -130,9 +200,45 @@
     $('clearBtn').disabled = false;
   });
 
+  // --- Log out ---
   $('logoutBtn').addEventListener('click', async () => {
+    leaving = true;
     await signOut(auth);
+    sessionStorage.removeItem('vja-autoredir');
     window.location.href = '../index.html';
+  });
+
+  // --- Delete account (soft delete + 24h recovery) ---
+  $('deleteBtn').addEventListener('click', async () => {
+    if (!userRef) return;
+    if (!confirm('Delete your account?\n\nYou will have 24 HOURS to recover it by logging back in. After that it is permanently gone.')) return;
+    $('deleteBtn').disabled = true;
+    try {
+      await setDoc(userRef, { pendingDeletion: true, deleteRequestedAt: serverTimestamp() }, { merge: true });
+      try { await setDoc(doc(db, 'stats', 'counts'), { users: increment(-1) }, { merge: true }); } catch (e) {}
+      leaving = true;
+      await signOut(auth);
+      alert('Account scheduled for deletion. Log in within 24 hours to recover it.');
+      window.location.href = '../index.html';
+    } catch (err) {
+      show('Delete failed: ' + (err.code || err.message));
+      $('deleteBtn').disabled = false;
+    }
+  });
+
+  // --- Recover a pending-deletion account ---
+  $('recoverBtn').addEventListener('click', async () => {
+    if (!userRef) return;
+    $('recoverBtn').disabled = true;
+    try {
+      await setDoc(userRef, { pendingDeletion: false, deleteRequestedAt: deleteField() }, { merge: true });
+      try { await setDoc(doc(db, 'stats', 'counts'), { users: increment(1) }, { merge: true }); } catch (e) {}
+      $('recoverBanner').style.display = 'none';
+      show('Account recovered ✓', true);
+    } catch (err) {
+      show('Recover failed: ' + (err.code || err.message));
+      $('recoverBtn').disabled = false;
+    }
   });
 </script>
 </body>

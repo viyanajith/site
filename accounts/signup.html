@@ -74,7 +74,8 @@
 <script type="module">
   import { auth, db, usernameToEmail, USERNAME_RE } from "./firebase-init.js";
   import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
-  import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+  import { doc, setDoc, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+  import { celebrate } from "./particles.js";
 
   const $ = id => document.getElementById(id);
   const msg = $('msg');
@@ -102,7 +103,15 @@
         data: '',
         createdAt: serverTimestamp()
       });
-      window.location.href = 'account.html';
+      // Bump the public total-accounts counter (non-fatal if rules block it).
+      try {
+        await setDoc(doc(db, 'stats', 'counts'), { users: increment(1) }, { merge: true });
+      } catch (e) { /* counter is optional */ }
+
+      localStorage.setItem('vja-account-username', username);
+      show('Account created ✓', true);
+      celebrate();
+      setTimeout(() => { window.location.href = 'account.html'; }, 950);
     } catch (err) {
       $('submitBtn').disabled = false;
       if (err.code === 'auth/email-already-in-use') show('That username is already taken.');

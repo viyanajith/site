@@ -191,7 +191,7 @@
   /* Account buttons — centered in the top bar */
   .account-nav {
     position: absolute; left: 50%; transform: translateX(-50%);
-    display: flex; gap: 10px;
+    display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
   }
   .account-btn {
     background: transparent;
@@ -199,6 +199,7 @@
     color: var(--neon);
     padding: 6px 16px;
     border-radius: 6px;
+    font-family: inherit;
     font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase;
     text-decoration: none; cursor: pointer;
     transition: all 0.2s;
@@ -213,6 +214,18 @@
   .account-btn.signup:hover {
     background: var(--neon-pink); color: #000;
     box-shadow: 0 0 12px var(--neon-pink);
+  }
+  .account-btn.count {
+    border-color: var(--neon-lime); color: var(--neon-lime); cursor: default;
+  }
+  .account-btn.count:hover {
+    background: transparent; color: var(--neon-lime); box-shadow: none;
+  }
+  .account-btn.logout {
+    border-color: var(--ink-dim); color: var(--ink-dim);
+  }
+  .account-btn.logout:hover {
+    background: var(--ink-dim); color: #000; box-shadow: none;
   }
   @media (max-width: 560px) {
     .account-nav { position: static; transform: none; }
@@ -773,8 +786,11 @@
 <div class="top-bar">
   <div class="brand">VIYANAJITH<span class="dot"></span>BLOG</div>
   <nav class="account-nav">
-    <a class="account-btn login" href="accounts/login.html">Log In</a>
-    <a class="account-btn signup" href="accounts/signup.html">Sign Up</a>
+    <button class="account-btn count" id="accountCount" title="Total accounts">👥 …</button>
+    <a class="account-btn login"   id="loginBtn"   href="accounts/login.html">Log In</a>
+    <a class="account-btn signup"  id="signupBtn"  href="accounts/signup.html">Sign Up</a>
+    <a class="account-btn account" id="accountBtn" href="accounts/account.html" style="display:none">@you</a>
+    <button class="account-btn logout" id="navLogoutBtn" style="display:none">Log Out</button>
   </nav>
   <div class="top-right">
     <div class="status"><span class="live"></span>SYSTEM ONLINE</div>
@@ -912,6 +928,11 @@
     <div class="modal-toggle">
       <span>Auto-load my settings (saved on this device)</span>
       <div class="toggle" id="autoToggle"></div>
+    </div>
+
+    <div class="modal-toggle">
+      <span>Auto-login to my account</span>
+      <div class="toggle" id="autoLoginToggle"></div>
     </div>
 
     <label>Your shareable URL</label>
@@ -1563,6 +1584,77 @@ clickerBtn.addEventListener('click', async () => {
 applySettings();
 updateUrlInBar();
 maybeAskName();
+</script>
+<!-- Account integration: counter, login state, auto-login -->
+<script type="module">
+  import { auth, db } from "./accounts/firebase-init.js";
+  import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+  import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+  const $ = id => document.getElementById(id);
+  const AUTO_KEY = 'vja-auto-login';
+  const USER_KEY = 'vja-account-username';
+
+  // --- Total-accounts counter ---
+  (async () => {
+    try {
+      const snap = await getDoc(doc(db, 'stats', 'counts'));
+      const n = snap.exists() ? Math.max(0, snap.data().users || 0) : 0;
+      $('accountCount').textContent = '👥 ' + n;
+    } catch (e) {
+      $('accountCount').textContent = '👥 —';
+    }
+  })();
+
+  // --- Auto-login setting toggle ---
+  const autoToggle = $('autoLoginToggle');
+  const autoOn = () => localStorage.getItem(AUTO_KEY) === '1';
+  autoToggle.classList.toggle('on', autoOn());
+  autoToggle.addEventListener('click', () => {
+    localStorage.setItem(AUTO_KEY, autoOn() ? '0' : '1');
+    autoToggle.classList.toggle('on');
+  });
+
+  // --- Reflect login state in the URL (?loggedin=1/0) ---
+  function setLoggedInParam(v) {
+    try {
+      const u = new URL(window.location.href);
+      u.searchParams.set('loggedin', v);
+      history.replaceState(null, '', u);
+    } catch (e) {}
+  }
+
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      setLoggedInParam('1');
+      const name = localStorage.getItem(USER_KEY) || 'me';
+      $('accountBtn').textContent = '@' + name;
+      $('accountBtn').style.display = '';
+      $('navLogoutBtn').style.display = '';
+      $('loginBtn').style.display = 'none';
+      $('signupBtn').style.display = 'none';
+      // Auto-login: jump straight to the account page (once per browser session)
+      if (autoOn() && !sessionStorage.getItem('vja-autoredir')) {
+        sessionStorage.setItem('vja-autoredir', '1');
+        window.location.href = 'accounts/account.html';
+      }
+    } else {
+      setLoggedInParam('0');
+      $('accountBtn').style.display = 'none';
+      $('navLogoutBtn').style.display = 'none';
+      $('loginBtn').style.display = '';
+      $('signupBtn').style.display = '';
+      // Instant-login button for returning users on this device
+      const saved = localStorage.getItem(USER_KEY);
+      if (saved) $('loginBtn').textContent = '⚡ @' + saved;
+    }
+  });
+
+  $('navLogoutBtn').addEventListener('click', async () => {
+    await signOut(auth);
+    sessionStorage.removeItem('vja-autoredir');
+    window.location.reload();
+  });
 </script>
 </body>
 </html>
