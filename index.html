@@ -1,0 +1,1535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VIYANAJITH.BLOG — Learn with Viyan</title>
+<meta name="description" content="Learn with Viyan — the fun way." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #05060a;
+    --bg-2:      #0a0d14;
+    --ink:       #e6f1ff;
+    --ink-dim:   #7c8aa3;
+    --neon:      #00f0ff;        /* the user's chosen color */
+    --neon-pink: #ff2bd6;
+    --neon-lime: #b6ff3c;
+    --neon-amber:#ffb300;
+    --grid:      rgba(0, 240, 255, 0.06);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Space Mono', ui-monospace, monospace;
+    background: var(--bg);
+    color: var(--ink);
+    overflow-x: hidden;
+    cursor: crosshair;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* ===== Animated grid bg ===== */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+    pointer-events: none;
+    z-index: 0;
+    animation: gridShift 24s linear infinite;
+  }
+  @keyframes gridShift {
+    from { background-position: 0 0, 0 0; }
+    to   { background-position: 48px 48px, 48px 48px; }
+  }
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    background: repeating-linear-gradient(
+      0deg, transparent 0, transparent 3px,
+      rgba(0, 240, 255, 0.015) 3px, rgba(0, 240, 255, 0.015) 4px
+    );
+    pointer-events: none;
+    z-index: 1;
+    mix-blend-mode: screen;
+  }
+
+  /* ===== STYLE: NEON (default) — already styled above ===== */
+
+  /* ===== STYLE: GLITCHY — chaotic, more effects ===== */
+  body.style-glitchy::before {
+    animation: gridShift 6s linear infinite, glitchShake 0.3s infinite;
+    background-size: 32px 32px;
+    opacity: 1.5;
+  }
+  @keyframes glitchShake {
+    0%, 100% { transform: translate(0); }
+    20% { transform: translate(2px, -1px); }
+    40% { transform: translate(-3px, 2px); }
+    60% { transform: translate(1px, -2px); }
+    80% { transform: translate(-1px, 1px); }
+  }
+  body.style-glitchy h1.title .glitch::before {
+    animation: glitch 0.8s infinite;
+    opacity: 1;
+  }
+  body.style-glitchy h1.title {
+    animation: titleShake 2s infinite;
+  }
+  @keyframes titleShake {
+    0%, 100% { transform: translate(0) skew(0); }
+    25% { transform: translate(-3px, 1px) skew(-1deg); }
+    50% { transform: translate(3px, -1px) skew(1deg); }
+    75% { transform: translate(-1px, 2px) skew(0); }
+  }
+  body.style-glitchy .brand,
+  body.style-glitchy .qbtn,
+  body.style-glitchy .link-title {
+    animation: textGlitch 3s infinite;
+  }
+  @keyframes textGlitch {
+    0%, 90%, 100% { transform: translate(0); filter: hue-rotate(0); }
+    91% { transform: translate(2px, 0); filter: hue-rotate(90deg); }
+    92% { transform: translate(-2px, 0); filter: hue-rotate(-90deg); }
+    93% { transform: translate(0, 1px); filter: hue-rotate(180deg); }
+  }
+  body.style-glitchy .playground {
+    animation: borderGlitch 2s infinite;
+  }
+  @keyframes borderGlitch {
+    0%, 100% { border-color: rgba(0, 240, 255, 0.2); }
+    50% { border-color: rgba(255, 43, 214, 0.4); }
+  }
+
+  /* ===== STYLE: CALM — clean, no animation, soft ===== */
+  body.style-calm {
+    cursor: default !important;
+  }
+  body.style-calm::before { animation: none; opacity: 0.3; }
+  body.style-calm::after { display: none; }
+  body.style-calm h1.title .glitch::before { display: none !important; }
+  body.style-calm h1 .glitch {
+    text-shadow: 0 0 10px var(--neon);
+  }
+  body.style-calm .brand .dot,
+  body.style-calm .status .live {
+    animation: none !important;
+  }
+  body.style-calm .trail { display: none !important; }
+  body.style-calm .star { animation-duration: 1.2s !important; }
+  body.style-calm .qbtn,
+  body.style-calm .link-card {
+    transition: all 0.5s ease;
+  }
+  body.style-calm h1.title {
+    animation: none;
+    opacity: 1;
+  }
+
+  /* ====== HEADER ====== */
+  .top-bar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 18px 32px;
+    background: linear-gradient(180deg, rgba(5,6,10,0.9), transparent);
+    backdrop-filter: blur(8px);
+  }
+  .brand {
+    font-family: 'Syncopate', sans-serif; font-weight: 700;
+    font-size: 14px; letter-spacing: 0.3em;
+    color: var(--neon);
+    text-shadow: 0 0 12px var(--neon);
+  }
+  .brand .dot {
+    display: inline-block; width: 8px; height: 8px;
+    background: var(--neon-pink); border-radius: 50%;
+    margin: 0 6px;
+    box-shadow: 0 0 12px var(--neon-pink);
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: 0.4; transform: scale(0.7); }
+  }
+  .top-right {
+    display: flex; align-items: center; gap: 16px;
+  }
+  .status {
+    font-size: 11px; letter-spacing: 0.2em;
+    color: var(--ink-dim); text-transform: uppercase;
+  }
+  .status .live {
+    display: inline-block; width: 6px; height: 6px;
+    background: var(--neon-lime); border-radius: 50%;
+    margin-right: 6px;
+    box-shadow: 0 0 8px var(--neon-lime);
+    animation: pulse 1s ease-in-out infinite;
+  }
+  .gear-btn {
+    background: transparent;
+    border: 1px solid var(--neon);
+    color: var(--neon);
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .gear-btn:hover {
+    background: var(--neon); color: #000;
+    box-shadow: 0 0 12px var(--neon);
+    transform: rotate(60deg);
+  }
+
+  /* ====== HERO ====== */
+  .hero {
+    position: relative; z-index: 2;
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    padding: 100px 24px 60px; text-align: center;
+  }
+  .hero-tag {
+    font-size: 11px; letter-spacing: 0.4em;
+    color: var(--ink-dim); text-transform: uppercase;
+    margin-bottom: 24px;
+    opacity: 0; animation: fadeUp 0.8s ease forwards 0.2s;
+  }
+  .hero-tag::before, .hero-tag::after {
+    content: '—'; margin: 0 12px; color: var(--neon);
+  }
+  .greeting {
+    font-family: 'Syncopate', sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.2em;
+    color: var(--neon-lime);
+    text-shadow: 0 0 10px var(--neon-lime);
+    margin-bottom: 16px;
+    opacity: 0;
+    animation: fadeUp 0.9s ease forwards 0.3s;
+    text-transform: uppercase;
+  }
+  h1.title {
+    font-family: 'Syncopate', sans-serif; font-weight: 700;
+    font-size: clamp(48px, 11vw, 140px);
+    letter-spacing: 0.02em; line-height: 0.9;
+    margin-bottom: 24px;
+    opacity: 0; animation: fadeUp 0.9s ease forwards 0.4s;
+  }
+  h1 .glitch {
+    display: inline-block;
+    background: linear-gradient(180deg, var(--neon) 0%, var(--neon-pink) 100%);
+    -webkit-background-clip: text; background-clip: text;
+    color: transparent;
+    text-shadow: 0 0 30px var(--neon);
+    position: relative;
+  }
+  h1 .glitch::before {
+    content: attr(data-text);
+    position: absolute; left: 2px; top: 0;
+    color: var(--neon-pink);
+    -webkit-text-fill-color: var(--neon-pink);
+    mix-blend-mode: screen; opacity: 0.7;
+    animation: glitch 4s infinite;
+    pointer-events: none;
+  }
+  @keyframes glitch {
+    0%, 92%, 100% { transform: translate(0); opacity: 0; }
+    93% { transform: translate(-2px, 1px); opacity: 0.7; }
+    94% { transform: translate(2px, -1px); opacity: 0.5; }
+    95% { transform: translate(-1px, 2px); opacity: 0.7; }
+    96% { transform: translate(0); opacity: 0; }
+  }
+  .hero-sub {
+    font-size: 14px; color: var(--ink-dim);
+    max-width: 480px; letter-spacing: 0.05em;
+    margin-bottom: 40px;
+    opacity: 0; animation: fadeUp 0.9s ease forwards 0.6s;
+  }
+  .hero-sub b { color: var(--neon-lime); font-weight: normal; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ===== Color picker on main page ===== */
+  .color-picker-row {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 32px;
+    opacity: 0; animation: fadeUp 0.9s ease forwards 0.7s;
+  }
+  .color-picker-label {
+    font-size: 10px; letter-spacing: 0.25em;
+    color: var(--ink-dim); text-transform: uppercase;
+  }
+  .color-picker {
+    width: 36px; height: 36px;
+    border: 2px solid var(--neon);
+    border-radius: 50%;
+    cursor: pointer;
+    background: transparent;
+    padding: 0;
+    overflow: hidden;
+    box-shadow: 0 0 12px var(--neon);
+    transition: transform 0.2s;
+  }
+  .color-picker:hover { transform: scale(1.15); }
+  .color-picker::-webkit-color-swatch-wrapper { padding: 0; border: none; }
+  .color-picker::-webkit-color-swatch { border: none; border-radius: 50%; }
+  .color-picker::-moz-color-swatch { border: none; border-radius: 50%; }
+  .color-hex {
+    font-family: 'JetBrains Mono', 'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--neon);
+    letter-spacing: 0.1em;
+    min-width: 80px;
+  }
+
+  /* ===== QUICK BUTTONS ===== */
+  .quick-buttons {
+    display: flex; flex-wrap: wrap;
+    justify-content: center; gap: 10px;
+    max-width: 720px; margin-bottom: 56px;
+    opacity: 0; animation: fadeUp 0.9s ease forwards 0.8s;
+  }
+  .qbtn {
+    position: relative; padding: 12px 22px;
+    background: transparent;
+    border: 1px solid var(--btn-c, var(--neon));
+    color: var(--btn-c, var(--neon));
+    font-family: 'Syncopate', sans-serif; font-weight: 700;
+    font-size: 11px; letter-spacing: 0.2em;
+    text-decoration: none; text-transform: uppercase;
+    transition: all 0.25s ease; cursor: pointer;
+    overflow: hidden; z-index: 1;
+  }
+  .qbtn::before {
+    content: ''; position: absolute; inset: 0;
+    background: var(--btn-c, var(--neon));
+    transform: translateY(100%);
+    transition: transform 0.25s ease;
+    z-index: -1;
+  }
+  .qbtn:hover { color: #000; box-shadow: 0 0 18px var(--btn-c, var(--neon)); }
+  .qbtn:hover::before { transform: translateY(0); }
+  .qbtn[data-c="cyan"]  { --btn-c: var(--neon);       }
+  .qbtn[data-c="pink"]  { --btn-c: var(--neon-pink);  }
+  .qbtn[data-c="lime"]  { --btn-c: var(--neon-lime);  }
+  .qbtn[data-c="amber"] { --btn-c: var(--neon-amber); }
+
+  /* ===== PLAYGROUND ===== */
+  .playground {
+    position: relative;
+    width: min(900px, 100%);
+    height: 280px;
+    margin-bottom: 40px;
+    border: 1px dashed rgba(0, 240, 255, 0.2);
+    border-radius: 4px;
+    overflow: hidden;
+    opacity: 0; animation: fadeUp 1s ease forwards 1s;
+  }
+  .playground-label {
+    position: absolute; top: 8px; left: 12px;
+    font-size: 10px; letter-spacing: 0.3em;
+    color: var(--ink-dim); text-transform: uppercase;
+    z-index: 2; pointer-events: none;
+  }
+  .playground-label .counter { color: var(--neon); margin-left: 8px; }
+  .zone-hint {
+    position: absolute;
+    bottom: 8px; left: 8px;
+    width: 200px; height: 200px;
+    border: 1px dotted rgba(0, 240, 255, 0.1);
+    pointer-events: none; z-index: 1;
+  }
+  .zone-hint::after {
+    content: 'CATCH ZONE 200×200';
+    position: absolute; bottom: 4px; left: 6px;
+    font-size: 8px; letter-spacing: 0.25em;
+    color: rgba(124, 138, 163, 0.4);
+  }
+  .slippery {
+    position: absolute;
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, var(--neon), #006d77);
+    box-shadow: 0 0 20px var(--neon), inset 0 0 10px rgba(255,255,255,0.3);
+    cursor: pointer;
+    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
+                left 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                top 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                background 0.3s;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syncopate', sans-serif;
+    font-size: 10px; color: #001;
+    letter-spacing: 0.1em; user-select: none;
+    z-index: 3;
+  }
+  .slippery:hover { transform: scale(1.1); }
+  .slippery.caught {
+    background: radial-gradient(circle at 30% 30%, var(--neon-lime), #4a7d00);
+    box-shadow: 0 0 30px var(--neon-lime);
+    animation: caught 0.4s ease;
+  }
+  @keyframes caught {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.4); }
+    100% { transform: scale(1); }
+  }
+  .drifter {
+    position: absolute;
+    width: 40px; height: 40px;
+    background: var(--neon-pink);
+    box-shadow: 0 0 16px var(--neon-pink);
+    cursor: pointer; z-index: 3;
+    transition: transform 0.3s;
+  }
+  .drifter:hover { transform: rotate(45deg) scale(1.3); }
+  .star {
+    position: absolute;
+    width: 4px; height: 4px;
+    background: var(--neon-amber);
+    box-shadow: 0 0 8px var(--neon-amber);
+    border-radius: 50%;
+    pointer-events: none; z-index: 2;
+  }
+
+  /* ===== Visitor pulse clicker ===== */
+  .clicker {
+    position: absolute;
+    top: 32px; right: 12px;
+    z-index: 3;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 6px;
+    user-select: none;
+    width: 150px;
+  }
+  .clicker-title {
+    font-family: 'Syncopate', sans-serif;
+    font-size: 9px; letter-spacing: 0.25em;
+    color: var(--neon-lime);
+    text-transform: uppercase; text-align: center;
+    text-shadow: 0 0 8px rgba(182, 255, 60, 0.4);
+  }
+  .clicker-desc {
+    font-size: 9px; line-height: 1.4;
+    color: var(--ink-dim); text-align: center;
+    max-width: 150px;
+  }
+  .clicker-btn {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    background: transparent;
+    border: 2px solid var(--neon-lime);
+    color: var(--neon-lime);
+    font-family: 'Syncopate', sans-serif; font-weight: 700;
+    font-size: 11px; letter-spacing: 0.1em;
+    cursor: pointer;
+    box-shadow: 0 0 16px rgba(182, 255, 60, 0.4);
+    transition: all 0.15s ease;
+    outline: none;
+    margin-top: 2px;
+  }
+  .clicker-btn:hover:not(:disabled) {
+    background: var(--neon-lime); color: #000;
+    box-shadow: 0 0 24px var(--neon-lime);
+  }
+  .clicker-btn:active:not(:disabled) { transform: scale(0.85); }
+  .clicker-btn.pressed { animation: clickPop 0.4s ease; }
+  @keyframes clickPop {
+    0%   { transform: scale(0.85); }
+    50%  { transform: scale(1.2); box-shadow: 0 0 32px var(--neon-lime); }
+    100% { transform: scale(1); }
+  }
+  .clicker-btn:disabled {
+    cursor: not-allowed;
+    border-color: var(--ink-dim);
+    color: var(--ink-dim);
+    box-shadow: none;
+    opacity: 0.5;
+  }
+  .clicker-count {
+    font-family: 'Syncopate', sans-serif;
+    font-size: 13px; font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--neon-lime);
+    text-shadow: 0 0 10px rgba(182, 255, 60, 0.6);
+    min-width: 110px; text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .clicker-count.maxed {
+    color: var(--neon-pink);
+    text-shadow: 0 0 10px var(--neon-pink);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  .clicker-status {
+    font-size: 8px; letter-spacing: 0.25em;
+    color: var(--ink-dim); text-transform: uppercase;
+    text-align: center; min-height: 10px;
+  }
+  .clicker-status.done  { color: var(--neon); }
+  .clicker-status.maxed { color: var(--neon-pink); }
+
+  /* ===== LINKS GRID ===== */
+  .links {
+    position: relative; z-index: 2;
+    max-width: 1100px; margin: 0 auto;
+    padding: 60px 24px 120px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+  }
+  .link-card {
+    position: relative; display: block;
+    padding: 32px 24px;
+    background: var(--bg-2);
+    border: 1px solid rgba(0, 240, 255, 0.15);
+    text-decoration: none; color: var(--ink);
+    overflow: hidden;
+    transition: all 0.3s ease; cursor: pointer;
+  }
+  .link-card::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, transparent 40%, rgba(0,240,255,0.08) 50%, transparent 60%);
+    transform: translateX(-100%);
+    transition: transform 0.6s;
+  }
+  .link-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px var(--accent);
+  }
+  .link-card:hover::before { transform: translateX(100%); }
+  .link-card[data-color="cyan"]  { --accent: var(--neon);       }
+  .link-card[data-color="pink"]  { --accent: var(--neon-pink);  }
+  .link-card[data-color="lime"]  { --accent: var(--neon-lime);  }
+  .link-card[data-color="amber"] { --accent: var(--neon-amber); }
+  .link-num {
+    font-family: 'Syncopate', sans-serif;
+    font-size: 11px; letter-spacing: 0.2em;
+    color: var(--ink-dim); margin-bottom: 24px;
+  }
+  .link-num span { color: var(--accent); }
+  .link-title {
+    font-family: 'Syncopate', sans-serif; font-weight: 700;
+    font-size: 22px; letter-spacing: 0.02em;
+    margin-bottom: 8px; line-height: 1.1;
+  }
+  .link-title em {
+    font-style: normal;
+    color: var(--accent);
+    text-shadow: 0 0 12px var(--accent);
+  }
+  .link-desc {
+    font-size: 13px; color: var(--ink-dim);
+    margin-bottom: 24px; line-height: 1.5;
+  }
+  .link-arrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 11px; letter-spacing: 0.2em;
+    color: var(--accent); text-transform: uppercase;
+  }
+  .link-arrow .arr { transition: transform 0.3s; }
+  .link-card:hover .link-arrow .arr { transform: translateX(6px); }
+  .link-card .corner {
+    position: absolute; top: 0; right: 0;
+    width: 24px; height: 24px;
+    border-top: 1px solid var(--accent);
+    border-right: 1px solid var(--accent);
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .link-card:hover .corner { opacity: 1; }
+
+  /* ===== Cursor trail ===== */
+  .trail {
+    position: fixed;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    pointer-events: none; z-index: 1000;
+    background: var(--neon);
+    box-shadow: 0 0 10px var(--neon);
+    animation: trailFade 0.8s forwards;
+  }
+  @keyframes trailFade {
+    from { opacity: 0.8; transform: scale(1); }
+    to   { opacity: 0; transform: scale(0); }
+  }
+
+  /* ===== MODAL (name prompt + settings) ===== */
+  .modal-bg {
+    position: fixed; inset: 0;
+    background: rgba(5, 6, 10, 0.85);
+    backdrop-filter: blur(8px);
+    z-index: 9000;
+    display: none;
+    align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .modal-bg.show { display: flex; animation: modalIn 0.3s ease; }
+  @keyframes modalIn { from { opacity: 0; } to { opacity: 1; } }
+  .modal {
+    background: var(--bg-2);
+    border: 1px solid var(--neon);
+    box-shadow: 0 0 40px rgba(0, 240, 255, 0.3);
+    padding: 32px 28px;
+    max-width: 420px; width: 100%;
+    position: relative;
+  }
+  .modal h2 {
+    font-family: 'Syncopate', sans-serif;
+    font-size: 16px; letter-spacing: 0.15em;
+    color: var(--neon);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+  .modal p {
+    font-size: 12px; color: var(--ink-dim);
+    margin-bottom: 20px;
+    line-height: 1.6;
+  }
+  .modal label {
+    display: block;
+    font-size: 10px; letter-spacing: 0.25em;
+    color: var(--ink-dim); text-transform: uppercase;
+    margin-bottom: 8px; margin-top: 16px;
+  }
+  .modal label:first-of-type { margin-top: 0; }
+  .modal input[type="text"] {
+    width: 100%;
+    padding: 12px 14px;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid rgba(0, 240, 255, 0.3);
+    color: var(--ink);
+    font-family: 'Space Mono', monospace;
+    font-size: 14px;
+    letter-spacing: 0.05em;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .modal input[type="text"]:focus {
+    border-color: var(--neon);
+    box-shadow: 0 0 12px rgba(0, 240, 255, 0.3);
+  }
+  .modal-row {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    margin-bottom: 8px;
+  }
+  .modal-chip {
+    padding: 8px 14px;
+    background: transparent;
+    border: 1px solid rgba(0, 240, 255, 0.3);
+    color: var(--ink-dim);
+    font-family: 'Syncopate', sans-serif;
+    font-size: 10px; letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .modal-chip:hover { border-color: var(--neon); color: var(--neon); }
+  .modal-chip.active {
+    background: var(--neon); color: #000;
+    border-color: var(--neon);
+    box-shadow: 0 0 12px var(--neon);
+  }
+  .modal-toggle {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    font-size: 12px;
+    color: var(--ink);
+  }
+  .toggle {
+    position: relative;
+    width: 44px; height: 22px;
+    background: rgba(0,0,0,0.5);
+    border: 1px solid rgba(0, 240, 255, 0.3);
+    border-radius: 22px;
+    cursor: pointer;
+    transition: all 0.25s;
+  }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    top: 2px; left: 2px;
+    width: 16px; height: 16px;
+    background: var(--ink-dim);
+    border-radius: 50%;
+    transition: all 0.25s;
+  }
+  .toggle.on {
+    background: var(--neon);
+    border-color: var(--neon);
+    box-shadow: 0 0 12px var(--neon);
+  }
+  .toggle.on::after {
+    left: 24px;
+    background: #000;
+  }
+  .modal-actions {
+    display: flex; gap: 10px; margin-top: 24px;
+  }
+  .modal-btn {
+    flex: 1;
+    padding: 12px 18px;
+    background: transparent;
+    border: 1px solid var(--neon);
+    color: var(--neon);
+    font-family: 'Syncopate', sans-serif;
+    font-weight: 700;
+    font-size: 11px; letter-spacing: 0.2em;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+  .modal-btn:hover {
+    background: var(--neon); color: #000;
+    box-shadow: 0 0 16px var(--neon);
+  }
+  .modal-btn.secondary {
+    border-color: var(--ink-dim);
+    color: var(--ink-dim);
+  }
+  .modal-btn.secondary:hover {
+    background: var(--ink-dim); color: #000;
+    box-shadow: none;
+  }
+  .modal-close {
+    position: absolute; top: 12px; right: 12px;
+    background: transparent;
+    border: none;
+    color: var(--ink-dim);
+    cursor: pointer;
+    font-size: 18px;
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .modal-close:hover { color: var(--neon); }
+  .modal .share-url {
+    font-size: 10px;
+    color: var(--ink-dim);
+    word-break: break-all;
+    padding: 10px;
+    background: rgba(0,0,0,0.4);
+    border: 1px dashed rgba(0,240,255,0.2);
+    margin-top: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    line-height: 1.5;
+  }
+  .modal .share-url .key { color: var(--neon-amber); }
+  .modal .share-url .val { color: var(--neon-lime); }
+
+  @media (max-width: 600px) {
+    .top-bar { padding: 14px 16px; }
+    .brand { font-size: 11px; letter-spacing: 0.2em; }
+    .status { display: none; }
+    .playground { height: 260px; }
+    .hero { padding: 80px 16px 40px; }
+    body { cursor: default; }
+    .qbtn { padding: 10px 16px; font-size: 10px; }
+    .modal { padding: 24px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="top-bar">
+  <div class="brand">VIYANAJITH<span class="dot"></span>BLOG</div>
+  <div class="top-right">
+    <div class="status"><span class="live"></span>SYSTEM ONLINE</div>
+    <button class="gear-btn" id="openSettings" aria-label="Settings">⚙</button>
+  </div>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-tag">LEARN · BUILD · PLAY</div>
+  <div class="greeting" id="greeting"></div>
+  <h1 class="title"><span class="glitch" data-text="VIYAN">VIYAN</span></h1>
+  <p class="hero-sub">
+    Hi! I'm Viyan. I make <b>games</b>, <b>AI experiments</b>, and <b>math stuff</b>.<br/>
+    Click around. Try to catch the orb. Have fun.
+  </p>
+
+  <!-- Color picker (live theme color) -->
+  <div class="color-picker-row">
+    <span class="color-picker-label">Theme color:</span>
+    <input type="color" class="color-picker" id="colorPicker" value="#00f0ff" />
+    <span class="color-hex" id="colorHex">#00F0FF</span>
+  </div>
+
+  <!-- Quick buttons -->
+  <div class="quick-buttons">
+    <a class="qbtn" data-c="cyan"  href="https://viyanajith.github.io/learn-math/" target="_blank" rel="noopener">Learn Math</a>
+    <a class="qbtn" data-c="pink"  href="http://youtube.com/@viyan-mines" target="_blank" rel="noopener">YouTube</a>
+    <a class="qbtn" data-c="lime"  href="https://viyanajith.github.io/stuff/gamesmainscreen.html" target="_blank" rel="noopener">Games</a>
+    <a class="qbtn" data-c="amber" href="https://viyanajith.github.io/stuff/godot/mainscreen.html" target="_blank" rel="noopener">Godot</a>
+    <a class="qbtn" data-c="pink"  href="https://viyanajith.github.io/stuff/AI/AI-game-learner.html" target="_blank" rel="noopener">AI Lab</a>
+  </div>
+
+  <!-- Playground -->
+  <div class="playground" id="playground">
+    <div class="playground-label">
+      PLAYGROUND ⟶ catch the orb
+      <span class="counter" id="score">000</span>
+    </div>
+    <div class="zone-hint"></div>
+    <div class="slippery" id="slippery">CATCH</div>
+    <div class="drifter" id="drifter"></div>
+    <div class="clicker">
+      <div class="clicker-title">★ VISITOR PULSE ★</div>
+      <div class="clicker-desc">Click once to let the world know you were here. Counts every visitor — worldwide.</div>
+      <button class="clicker-btn" id="clicker">CLICK</button>
+      <div class="clicker-count" id="clickerCount">·····</div>
+      <div class="clicker-status" id="clickerStatus">LOADING…</div>
+    </div>
+  </div>
+</section>
+
+<!-- LINK CARDS -->
+<section class="links">
+  <a class="link-card" data-color="cyan" href="https://viyanajith.github.io/learn-math/" target="_blank" rel="noopener">
+    <div class="corner"></div>
+    <div class="link-num">01 / <span>LEARN</span></div>
+    <div class="link-title">Learn <em>Math</em></div>
+    <div class="link-desc">Interactive math the fun way. No boring textbooks.</div>
+    <div class="link-arrow">ENTER <span class="arr">→</span></div>
+  </a>
+  <a class="link-card" data-color="pink" href="https://viyanajith.github.io/stuff/AI/AI-game-learner.html" target="_blank" rel="noopener">
+    <div class="corner"></div>
+    <div class="link-num">02 / <span>AI LAB</span></div>
+    <div class="link-title">AI <em>Game Learner</em></div>
+    <div class="link-desc">An AI I built that learns to navigate to targets on a 12×12 board.</div>
+    <div class="link-arrow">EXPLORE <span class="arr">→</span></div>
+  </a>
+  <a class="link-card" data-color="lime" href="https://viyanajith.github.io/stuff/gamesmainscreen.html" target="_blank" rel="noopener">
+    <div class="corner"></div>
+    <div class="link-num">03 / <span>ARCADE</span></div>
+    <div class="link-title">Play <em>Games</em></div>
+    <div class="link-desc">My collection of browser games. Pick one and play.</div>
+    <div class="link-arrow">PLAY <span class="arr">→</span></div>
+  </a>
+  <a class="link-card" data-color="amber" href="https://viyanajith.github.io/stuff/godot/mainscreen.html" target="_blank" rel="noopener">
+    <div class="corner"></div>
+    <div class="link-num">04 / <span>GODOT</span></div>
+    <div class="link-title">Godot <em>Games</em></div>
+    <div class="link-desc">Games I made with the Godot game engine.</div>
+    <div class="link-arrow">LAUNCH <span class="arr">→</span></div>
+  </a>
+  <a class="link-card" data-color="pink" href="http://youtube.com/@viyan-mines" target="_blank" rel="noopener">
+    <div class="corner"></div>
+    <div class="link-num">05 / <span>VIDEO</span></div>
+    <div class="link-title">My <em>YouTube</em></div>
+    <div class="link-desc">Subscribe to @viyan-mines for gameplay & tutorials.</div>
+    <div class="link-arrow">SUBSCRIBE <span class="arr">→</span></div>
+  </a>
+  <a class="link-card" data-color="cyan" href="https://viyanajith.blog/info" target="_blank" rel="noopener">
+    <div class="corner"></div>
+    <div class="link-num">06 / <span>INFO</span></div>
+    <div class="link-title">About <em>Me</em></div>
+    <div class="link-desc">More info about me, my projects, and what I'm working on.</div>
+    <div class="link-arrow">READ <span class="arr">→</span></div>
+  </a>
+</section>
+
+<!-- ===== NAME PROMPT MODAL ===== -->
+<div class="modal-bg" id="nameModal">
+  <div class="modal">
+    <h2>★ Welcome ★</h2>
+    <p>Hi there! What should I call you? I'll remember next time.</p>
+    <label for="nameInput">Your name (or nickname)</label>
+    <input type="text" id="nameInput" placeholder="e.g. John" maxlength="20" autocomplete="off" />
+    <div class="modal-actions">
+      <button class="modal-btn secondary" id="skipName">SKIP</button>
+      <button class="modal-btn" id="saveName">SAVE</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SETTINGS MODAL ===== -->
+<div class="modal-bg" id="settingsModal">
+  <div class="modal">
+    <button class="modal-close" id="closeSettings" aria-label="Close">✕</button>
+    <h2>⚙ Settings</h2>
+    <p>All settings are saved in the URL — share your URL to share your style!</p>
+
+    <label>Your name</label>
+    <input type="text" id="settingsName" placeholder="(no name set)" maxlength="20" autocomplete="off" />
+
+    <label>Style</label>
+    <div class="modal-row" id="styleRow">
+      <button class="modal-chip" data-style="neon">Neon</button>
+      <button class="modal-chip" data-style="glitchy">Glitchy</button>
+      <button class="modal-chip" data-style="calm">Calm</button>
+    </div>
+
+    <div class="modal-toggle">
+      <span>Sound effects</span>
+      <div class="toggle" id="soundToggle"></div>
+    </div>
+
+    <div class="modal-toggle">
+      <span>Auto-load my settings (saved on this device)</span>
+      <div class="toggle" id="autoToggle"></div>
+    </div>
+
+    <label>Your shareable URL</label>
+    <div class="share-url" id="shareUrl"></div>
+
+    <div class="modal-actions">
+      <button class="modal-btn secondary" id="resetSettings">RESET</button>
+      <button class="modal-btn" id="copyUrl">COPY URL</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===========================================================
+   1. URL PARAMETERS + LOCAL STORAGE
+   =========================================================== */
+const STORAGE = {
+  url:    'vja-saved-url',     // full saved URL params for auto-load
+  auto:   'vja-auto-load',     // '1' = on
+  clicked:'viyanajith-blog-clicked'  // visitor pulse already-clicked
+};
+
+// Read URL params
+const urlParams = new URLSearchParams(window.location.search);
+
+// Default settings
+const settings = {
+  theme: '#00f0ff',
+  name:  '',
+  style: 'neon',
+  sound: false
+};
+
+// Load from URL first
+function loadFromURL() {
+  if (urlParams.has('theme')) {
+    let t = urlParams.get('theme');
+    if (t && !t.startsWith('#')) t = '#' + t;
+    if (/^#[0-9a-fA-F]{6}$/.test(t)) settings.theme = t.toLowerCase();
+  }
+  if (urlParams.has('name')) {
+    settings.name = (urlParams.get('name') || '').slice(0, 20);
+  }
+  if (urlParams.has('style')) {
+    const s = urlParams.get('style');
+    if (['neon','glitchy','calm'].includes(s)) settings.style = s;
+  }
+  if (urlParams.has('sound')) {
+    settings.sound = urlParams.get('sound') === '1' || urlParams.get('sound') === 'on';
+  }
+}
+
+// AUTO-REDIRECT: if no URL params and we have saved ones, redirect there
+function checkAutoRedirect() {
+  try {
+    const auto = localStorage.getItem(STORAGE.auto);
+    const savedUrl = localStorage.getItem(STORAGE.url);
+    // Only redirect on real pages — skip in sandbox previews (about:srcdoc)
+    const isSandbox = window.location.protocol === 'about:' ||
+                      window.location.href.includes('srcdoc');
+    if (!isSandbox && auto === '1' && savedUrl && window.location.search === '') {
+      window.location.replace(window.location.pathname + savedUrl);
+      return true;
+    }
+  } catch (e) { /* ignore */ }
+  return false;
+}
+if (checkAutoRedirect()) {
+  // page is reloading, stop further script
+  throw new Error('Redirecting…');
+}
+
+loadFromURL();
+
+/* ===========================================================
+   2. APPLY SETTINGS TO THE PAGE
+   =========================================================== */
+function applySettings() {
+  // theme color
+  document.documentElement.style.setProperty('--neon', settings.theme);
+  // grid color matching theme
+  const rgb = hexToRgb(settings.theme);
+  if (rgb) {
+    document.documentElement.style.setProperty('--grid', `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.06)`);
+  }
+  // style class
+  document.body.classList.remove('style-neon','style-glitchy','style-calm');
+  document.body.classList.add('style-' + settings.style);
+  // greeting
+  const g = document.getElementById('greeting');
+  if (settings.name) {
+    g.textContent = `>> Hi ${settings.name}!`;
+    g.style.display = 'block';
+  } else {
+    g.textContent = '';
+  }
+  // color picker reflect
+  const cp = document.getElementById('colorPicker');
+  const ch = document.getElementById('colorHex');
+  if (cp) cp.value = settings.theme;
+  if (ch) ch.textContent = settings.theme.toUpperCase();
+  // settings modal reflect
+  const sn = document.getElementById('settingsName');
+  if (sn) sn.value = settings.name;
+  document.querySelectorAll('#styleRow .modal-chip').forEach(b => {
+    b.classList.toggle('active', b.dataset.style === settings.style);
+  });
+  document.getElementById('soundToggle').classList.toggle('on', settings.sound);
+  document.getElementById('autoToggle').classList.toggle('on', localStorage.getItem(STORAGE.auto) === '1');
+  // refresh share URL display
+  updateShareUrl();
+}
+
+function hexToRgb(hex) {
+  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return m ? { r: parseInt(m[1],16), g: parseInt(m[2],16), b: parseInt(m[3],16) } : null;
+}
+
+/* ===========================================================
+   3. URL BUILDING + SAVING
+   =========================================================== */
+function buildQueryString() {
+  const p = new URLSearchParams();
+  if (settings.theme && settings.theme.toLowerCase() !== '#00f0ff') {
+    p.set('theme', settings.theme.replace('#',''));
+  }
+  if (settings.name) p.set('name', settings.name);
+  if (settings.style && settings.style !== 'neon') p.set('style', settings.style);
+  if (settings.sound) p.set('sound', '1');
+  const qs = p.toString();
+  return qs ? '?' + qs : '';
+}
+
+function updateUrlInBar() {
+  const qs = buildQueryString();
+  // Save the latest URL params so auto-load can use them
+  try { localStorage.setItem(STORAGE.url, qs); } catch (e) {}
+  // Update the visible URL — wrapped in try/catch because some
+  // sandboxed previews (about:srcdoc) don't allow this.
+  try {
+    const newUrl = window.location.pathname + qs;
+    history.replaceState(null, '', newUrl);
+  } catch (e) {
+    // ignore — feature degrades gracefully (URL just won't update in the bar)
+  }
+}
+
+function updateShareUrl() {
+  const el = document.getElementById('shareUrl');
+  if (!el) return;
+  const base = window.location.origin + window.location.pathname;
+  const qs = buildQueryString();
+  if (!qs) {
+    el.innerHTML = base + ' <span style="color:var(--ink-dim)">(no extras yet)</span>';
+    return;
+  }
+  // pretty print
+  const parts = qs.substring(1).split('&').map(p => {
+    const [k,v] = p.split('=');
+    return `<span class="key">${k}</span>=<span class="val">${v}</span>`;
+  }).join('<span style="color:var(--ink-dim)">&</span>');
+  el.innerHTML = base + '<span style="color:var(--ink-dim)">?</span>' + parts;
+}
+
+/* ===========================================================
+   4. NAME PROMPT (first visit, if no name)
+   =========================================================== */
+const nameModal = document.getElementById('nameModal');
+const nameInput = document.getElementById('nameInput');
+const HAS_VISITED_KEY = 'vja-visited';
+
+function maybeAskName() {
+  if (settings.name) return; // already have name from URL
+  if (localStorage.getItem(HAS_VISITED_KEY) === '1') return; // already asked
+  setTimeout(() => {
+    nameModal.classList.add('show');
+    nameInput.focus();
+  }, 800);
+}
+
+document.getElementById('saveName').addEventListener('click', () => {
+  const v = nameInput.value.trim().slice(0, 20);
+  if (v) {
+    settings.name = v;
+    applySettings();
+    updateUrlInBar();
+    // Turn on auto-load by default since they personalized
+    localStorage.setItem(STORAGE.auto, '1');
+  }
+  localStorage.setItem(HAS_VISITED_KEY, '1');
+  nameModal.classList.remove('show');
+});
+document.getElementById('skipName').addEventListener('click', () => {
+  localStorage.setItem(HAS_VISITED_KEY, '1');
+  nameModal.classList.remove('show');
+});
+nameInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('saveName').click();
+});
+
+/* ===========================================================
+   5. COLOR PICKER (main page)
+   =========================================================== */
+const colorPicker = document.getElementById('colorPicker');
+const colorHex    = document.getElementById('colorHex');
+colorPicker.addEventListener('input', () => {
+  settings.theme = colorPicker.value.toLowerCase();
+  colorHex.textContent = settings.theme.toUpperCase();
+  applySettings();
+  updateUrlInBar();
+});
+
+/* ===========================================================
+   6. SETTINGS MODAL
+   =========================================================== */
+const settingsModal = document.getElementById('settingsModal');
+document.getElementById('openSettings').addEventListener('click', () => {
+  updateShareUrl();
+  settingsModal.classList.add('show');
+});
+document.getElementById('closeSettings').addEventListener('click', () => {
+  settingsModal.classList.remove('show');
+});
+settingsModal.addEventListener('click', (e) => {
+  if (e.target === settingsModal) settingsModal.classList.remove('show');
+});
+
+// Name field in settings
+document.getElementById('settingsName').addEventListener('input', (e) => {
+  settings.name = e.target.value.slice(0, 20);
+  applySettings();
+  updateUrlInBar();
+});
+
+// Style chips
+document.querySelectorAll('#styleRow .modal-chip').forEach(btn => {
+  btn.addEventListener('click', () => {
+    settings.style = btn.dataset.style;
+    applySettings();
+    updateUrlInBar();
+    if (settings.sound) playBlip(440);
+  });
+});
+
+// Sound toggle
+document.getElementById('soundToggle').addEventListener('click', () => {
+  settings.sound = !settings.sound;
+  applySettings();
+  updateUrlInBar();
+  if (settings.sound) playBlip(660);
+});
+
+// Auto-load toggle (local-only, not in URL)
+document.getElementById('autoToggle').addEventListener('click', () => {
+  const cur = localStorage.getItem(STORAGE.auto) === '1';
+  localStorage.setItem(STORAGE.auto, cur ? '0' : '1');
+  applySettings();
+});
+
+// Reset
+document.getElementById('resetSettings').addEventListener('click', () => {
+  settings.theme = '#00f0ff';
+  settings.name  = '';
+  settings.style = 'neon';
+  settings.sound = false;
+  localStorage.removeItem(STORAGE.url);
+  localStorage.removeItem(STORAGE.auto);
+  localStorage.removeItem(HAS_VISITED_KEY);
+  applySettings();
+  try { history.replaceState(null, '', window.location.pathname); } catch (e) {}
+});
+
+// Copy URL
+document.getElementById('copyUrl').addEventListener('click', async () => {
+  const url = window.location.origin + window.location.pathname + buildQueryString();
+  try {
+    await navigator.clipboard.writeText(url);
+    const btn = document.getElementById('copyUrl');
+    const orig = btn.textContent;
+    btn.textContent = 'COPIED ✓';
+    setTimeout(() => btn.textContent = orig, 1500);
+  } catch (e) {
+    alert(url);
+  }
+});
+
+/* ===========================================================
+   7. SOUND EFFECTS (Web Audio API — no files needed!)
+   =========================================================== */
+let audioCtx = null;
+function getAudio() {
+  if (!audioCtx) {
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    } catch(e) { return null; }
+  }
+  // Browsers often start AudioContext in 'suspended' state.
+  // We must resume it after a user gesture for sound to play.
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume().catch(() => {});
+  }
+  return audioCtx;
+}
+function playBlip(freq = 440, duration = 0.08, type = 'square') {
+  if (!settings.sound) return;
+  const ctx = getAudio();
+  if (!ctx) return;
+  try {
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = type;
+    o.frequency.value = freq;
+    g.gain.value = 0.05;
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    o.connect(g); g.connect(ctx.destination);
+    o.start();
+    o.stop(ctx.currentTime + duration);
+  } catch (e) { /* ignore */ }
+}
+
+/* ===========================================================
+   8. PLAYGROUND MINI-GAMES
+   =========================================================== */
+const playground   = document.getElementById('playground');
+const slippery     = document.getElementById('slippery');
+const drifter      = document.getElementById('drifter');
+const scoreEl      = document.getElementById('score');
+let score = 0;
+
+const ZONE_PADDING = 8;
+const CATCH_ZONE_SIZE = 200;
+
+function pad3(n){ return String(n).padStart(3, '0'); }
+
+function getCatchZone() {
+  const pg = playground.getBoundingClientRect();
+  const w = slippery.offsetWidth, h = slippery.offsetHeight;
+  const size = Math.min(CATCH_ZONE_SIZE, pg.width - ZONE_PADDING*2, pg.height - ZONE_PADDING*2);
+  return {
+    minX: ZONE_PADDING,
+    minY: pg.height - size - ZONE_PADDING,
+    maxX: ZONE_PADDING + size - w,
+    maxY: pg.height - ZONE_PADDING - h
+  };
+}
+function getDrifterZone() {
+  const pg = playground.getBoundingClientRect();
+  const w = drifter.offsetWidth, h = drifter.offsetHeight;
+  const catchSize = Math.min(CATCH_ZONE_SIZE, pg.width - ZONE_PADDING*2, pg.height - ZONE_PADDING*2);
+  const labelMargin = 28;
+  const clickerWidth = 180;
+  return {
+    minX: ZONE_PADDING + catchSize + 16,
+    minY: labelMargin,
+    maxX: pg.width - w - ZONE_PADDING - clickerWidth,
+    maxY: pg.height - h - ZONE_PADDING
+  };
+}
+function placeRandomlyIn(el, zone) {
+  el.style.left = (zone.minX + Math.random() * Math.max(0, zone.maxX - zone.minX)) + 'px';
+  el.style.top  = (zone.minY + Math.random() * Math.max(0, zone.maxY - zone.minY)) + 'px';
+}
+function nudgeAwayInZone(el, zone, fromX, fromY, minDist=60, maxDist=140) {
+  for (let i = 0; i < 16; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const d = minDist + Math.random() * (maxDist - minDist);
+    const nx = fromX + Math.cos(a) * d;
+    const ny = fromY + Math.sin(a) * d;
+    if (nx >= zone.minX && nx <= zone.maxX && ny >= zone.minY && ny <= zone.maxY) {
+      el.style.left = nx + 'px'; el.style.top = ny + 'px'; return;
+    }
+  }
+  placeRandomlyIn(el, zone);
+}
+
+let drifterX = 100, drifterY = 80;
+let dvx = 0.5, dvy = 0.35;
+
+function initPositions() {
+  placeRandomlyIn(slippery, getCatchZone());
+  const dz = getDrifterZone();
+  drifterX = dz.minX + 20; drifterY = dz.minY + 20;
+  drifter.style.left = drifterX + 'px'; drifter.style.top = drifterY + 'px';
+}
+window.addEventListener('load', initPositions);
+window.addEventListener('resize', initPositions);
+
+playground.addEventListener('mousemove', (e) => {
+  const pg = playground.getBoundingClientRect();
+  const sr = slippery.getBoundingClientRect();
+  const sCx = sr.left + sr.width/2 - pg.left;
+  const sCy = sr.top + sr.height/2 - pg.top;
+  const cx = e.clientX - pg.left, cy = e.clientY - pg.top;
+  if (Math.hypot(cx - sCx, cy - sCy) < 70) {
+    nudgeAwayInZone(slippery, getCatchZone(),
+      parseFloat(slippery.style.left)||0, parseFloat(slippery.style.top)||0);
+  }
+});
+slippery.addEventListener('click', (e) => {
+  e.preventDefault();
+  score++;
+  scoreEl.textContent = pad3(score);
+  slippery.classList.add('caught');
+  spawnStars(slippery);
+  playBlip(800 + score*20, 0.1, 'sine');
+  setTimeout(() => {
+    slippery.classList.remove('caught');
+    placeRandomlyIn(slippery, getCatchZone());
+  }, 400);
+});
+
+function tickDrifter() {
+  const z = getDrifterZone();
+  drifterX += dvx; drifterY += dvy;
+  if (drifterX < z.minX) { drifterX = z.minX; dvx *= -1; }
+  if (drifterX > z.maxX) { drifterX = z.maxX; dvx *= -1; }
+  if (drifterY < z.minY) { drifterY = z.minY; dvy *= -1; }
+  if (drifterY > z.maxY) { drifterY = z.maxY; dvy *= -1; }
+  drifter.style.left = drifterX + 'px';
+  drifter.style.top  = drifterY + 'px';
+  drifter.style.transform = `rotate(${(performance.now()/20) % 360}deg)`;
+  requestAnimationFrame(tickDrifter);
+}
+requestAnimationFrame(tickDrifter);
+drifter.addEventListener('click', () => {
+  const a = Math.random() * Math.PI * 2;
+  const sp = 4 + Math.random() * 3;
+  dvx = Math.cos(a) * sp; dvy = Math.sin(a) * sp;
+  spawnStars(drifter);
+  playBlip(220, 0.15, 'triangle');
+  setTimeout(() => { dvx = Math.sign(dvx)*0.5; dvy = Math.sign(dvy)*0.35; }, 600);
+});
+
+function spawnStars(originEl) {
+  const r = originEl.getBoundingClientRect();
+  const pg = playground.getBoundingClientRect();
+  const cx = r.left + r.width/2 - pg.left;
+  const cy = r.top + r.height/2 - pg.top;
+  for (let i = 0; i < 8; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    s.style.left = cx + 'px'; s.style.top = cy + 'px';
+    playground.appendChild(s);
+    const a = (i/8)*Math.PI*2, d = 40 + Math.random()*30;
+    s.animate([
+      { transform: 'translate(0,0) scale(1)', opacity: 1 },
+      { transform: `translate(${Math.cos(a)*d}px, ${Math.sin(a)*d}px) scale(0)`, opacity: 0 }
+    ], { duration: 600, easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)' });
+    setTimeout(() => s.remove(), 600);
+  }
+}
+
+/* Cursor trail */
+let lastTrail = 0;
+document.addEventListener('mousemove', (e) => {
+  const now = Date.now();
+  if (now - lastTrail < 30) return;
+  lastTrail = now;
+  const t = document.createElement('div');
+  t.className = 'trail';
+  t.style.left = (e.clientX - 3) + 'px';
+  t.style.top  = (e.clientY - 3) + 'px';
+  t.style.background = settings.theme;
+  t.style.boxShadow = `0 0 10px ${settings.theme}`;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 800);
+});
+
+/* Press V for star burst */
+document.addEventListener('keydown', (e) => {
+  if (e.key.toLowerCase() === 'v' && !document.activeElement.matches('input,textarea')) {
+    spawnStars(slippery);
+    spawnStars(drifter);
+    playBlip(300, 0.2, 'sawtooth');
+  }
+});
+
+/* ===========================================================
+   9. VISITOR PULSE COUNTER (with offline support!)
+   =========================================================== */
+const clickerBtn    = document.getElementById('clicker');
+const clickerCount  = document.getElementById('clickerCount');
+const clickerStatus = document.getElementById('clickerStatus');
+const COUNTER_KEY   = 'viyanajith-blog-clicks';
+const COUNTER_API   = 'https://countapi.mileshilliard.com/api/v1';
+const MAX_COUNT     = 4294967296;
+const PENDING_KEY   = 'vja-click-pending';  // '1' if user clicked offline, needs sync
+
+function formatCount(n) {
+  if (n >= MAX_COUNT) return MAX_COUNT.toLocaleString('en-US');
+  return n.toLocaleString('en-US');
+}
+function setStatus(text, kind = '') {
+  clickerStatus.textContent = text;
+  clickerStatus.className = 'clicker-status' + (kind ? ' ' + kind : '');
+}
+function showMaxed() {
+  clickerCount.classList.add('maxed');
+  setStatus('MAX REACHED', 'maxed');
+  clickerBtn.disabled = true;
+  clickerBtn.textContent = 'MAX';
+}
+function hasAlreadyClicked() {
+  try { return localStorage.getItem(STORAGE.clicked) === '1'; } catch (e) { return false; }
+}
+function markAsClicked() {
+  try { localStorage.setItem(STORAGE.clicked, '1'); } catch (e) {}
+}
+function hasPendingSync() {
+  try { return localStorage.getItem(PENDING_KEY) === '1'; } catch (e) { return false; }
+}
+function setPendingSync(on) {
+  try {
+    if (on) localStorage.setItem(PENDING_KEY, '1');
+    else    localStorage.removeItem(PENDING_KEY);
+  } catch (e) {}
+}
+
+// Try to send a single hit to the server. Returns the new value or null on failure.
+async function sendHit() {
+  try {
+    const res = await fetch(`${COUNTER_API}/hit/${COUNTER_KEY}`);
+    if (!res.ok) return null;
+    const d = await res.json();
+    return typeof d.value === 'number' ? d.value : null;
+  } catch (err) {
+    return null;
+  }
+}
+
+// Try to read the current value from the server.
+async function fetchCurrent() {
+  try {
+    const res = await fetch(`${COUNTER_API}/get/${COUNTER_KEY}`);
+    if (!res.ok) return 0;
+    const d = await res.json();
+    return d.value || 0;
+  } catch (err) {
+    return null; // null means offline / failed
+  }
+}
+
+// On page load: check for a pending offline click and send it now if we can.
+async function syncPendingClick() {
+  if (!hasPendingSync()) return;
+  const value = await sendHit();
+  if (value !== null) {
+    // Success! Sync complete.
+    setPendingSync(false);
+    const cap = Math.min(value, MAX_COUNT);
+    clickerCount.textContent = formatCount(cap);
+    if (cap >= MAX_COUNT) showMaxed();
+  }
+  // If it failed, leave the pending flag — we'll try again next page load.
+}
+
+async function loadCount() {
+  setStatus('LOADING…');
+  // First sync any pending offline click
+  await syncPendingClick();
+
+  // Now fetch the current count
+  const value = await fetchCurrent();
+  if (value === null) {
+    // Offline — but if user already clicked locally, show a hopeful state
+    clickerCount.textContent = '----';
+    if (hasAlreadyClicked()) {
+      clickerBtn.disabled = true;
+      clickerBtn.textContent = '✓';
+      const pendingMsg = hasPendingSync() ? 'SAVED — WILL SYNC' : 'THANKS — YOU CLICKED';
+      setStatus(pendingMsg, 'done');
+    } else {
+      setStatus('OFFLINE — TRY ANYWAY');
+    }
+    return;
+  }
+
+  clickerCount.textContent = formatCount(value);
+  if (value >= MAX_COUNT) { showMaxed(); return; }
+
+  if (hasAlreadyClicked()) {
+    clickerBtn.disabled = true;
+    clickerBtn.textContent = '✓';
+    setStatus('THANKS — YOU CLICKED', 'done');
+  } else {
+    setStatus('CLICK ONCE');
+  }
+}
+loadCount();
+
+// When the browser comes back online, try syncing any pending click
+window.addEventListener('online', () => {
+  if (hasPendingSync()) {
+    setStatus('SYNCING…');
+    syncPendingClick().then(() => {
+      // Refresh the displayed count after sync
+      fetchCurrent().then(v => {
+        if (v !== null) {
+          clickerCount.textContent = formatCount(v);
+          setStatus('THANKS — YOU WERE HERE', 'done');
+        }
+      });
+    });
+  }
+});
+
+clickerBtn.addEventListener('click', async () => {
+  if (clickerBtn.disabled) return;
+  if (hasAlreadyClicked()) {
+    clickerBtn.disabled = true;
+    setStatus('ALREADY CLICKED', 'done');
+    return;
+  }
+
+  // Lock the button immediately + remember they clicked
+  clickerBtn.disabled = true;
+  markAsClicked();
+  clickerBtn.classList.add('pressed');
+  spawnStars(clickerBtn);
+  playBlip(523, 0.1, 'sine');
+  setTimeout(() => playBlip(659, 0.1, 'sine'), 100);
+  setTimeout(() => playBlip(784, 0.15, 'sine'), 200);
+
+  // Optimistic update: bump the count visually right away
+  const cur = parseInt(clickerCount.textContent.replace(/[^\d]/g,''), 10) || 0;
+  const opt = Math.min(cur + 1, MAX_COUNT);
+  clickerCount.textContent = formatCount(opt);
+  clickerBtn.textContent = '✓';
+
+  // Try to send to server
+  const value = await sendHit();
+  if (value !== null) {
+    // Success online
+    const cap = Math.min(value, MAX_COUNT);
+    clickerCount.textContent = formatCount(cap);
+    if (cap >= MAX_COUNT) { showMaxed(); return; }
+    setPendingSync(false);  // just in case there was an old pending one
+    setStatus('THANKS — YOU WERE HERE', 'done');
+  } else {
+    // Offline! Save a "pending" flag so we sync next time.
+    setPendingSync(true);
+    setStatus('SAVED — WILL SYNC LATER', 'done');
+  }
+});
+
+/* ===========================================================
+   10. INITIAL APPLY + ASK NAME
+   =========================================================== */
+applySettings();
+updateUrlInBar();
+maybeAskName();
+</script>
+</body>
+</html>
