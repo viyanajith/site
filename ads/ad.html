@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Advertisement</title>
+<style>
+  :root { --bg:#05060a; --panel:#10131c; --neon:#00f0ff; --amber:#ffb300; --text:#e6e6e6; --dim:#7c8aa3; }
+  * { box-sizing:border-box; }
+  body { margin:0; min-height:100vh; background:var(--bg); color:var(--text);
+         font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+         display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px; }
+  .tag { color:var(--dim); font-size:.7rem; letter-spacing:.25em; margin-bottom:14px; }
+  .ad-box {
+    width:100%; max-width:520px; min-height:280px;
+    border:2px dashed #2a3145; border-radius:14px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:var(--panel);
+  }
+  .placeholder { color:var(--amber); font-size:1.6rem; letter-spacing:.12em; font-weight:bold; }
+  .note { color:var(--dim); font-size:.72rem; margin-top:10px; }
+  .status { margin-top:20px; color:var(--neon); font-size:.9rem; letter-spacing:.05em; }
+</style>
+</head>
+<body>
+  <div class="tag">ADVERTISEMENT</div>
+  <div class="ad-box">
+    <div class="placeholder">YOUR AD HERE</div>
+    <div class="note">(real ads go here later)</div>
+  </div>
+  <div class="status" id="status">Returning in 5…</div>
+
+<script>
+  // Keep in sync with ad-gate.js
+  const AD_INTERVAL_MIN = 1;
+  const KEY = 'vja-ad-next';
+  const WAIT_SEC = 5;
+
+  // Where to send the user back — only allow same-origin (no open redirect).
+  let ret = new URLSearchParams(location.search).get('return') || '';
+  try {
+    const u = new URL(ret, location.href);
+    ret = (u.origin === location.origin) ? u.href : '';
+  } catch (e) { ret = ''; }
+  if (!ret) ret = new URL('../index.html', location.href).href;
+
+  const status = document.getElementById('status');
+  let left = WAIT_SEC;
+  status.textContent = 'Returning in ' + left + '…';
+
+  const iv = setInterval(() => {
+    left--;
+    if (left > 0) {
+      status.textContent = 'Returning in ' + left + '…';
+      return;
+    }
+    clearInterval(iv);
+    status.textContent = 'Thanks! Returning…';
+    // ONLY now — after the ad finishes — reset the timer, then go back.
+    try { localStorage.setItem(KEY, String(Date.now() + AD_INTERVAL_MIN * 60 * 1000)); } catch (e) {}
+    location.replace(ret);
+  }, 1000);
+</script>
+</body>
+</html>
