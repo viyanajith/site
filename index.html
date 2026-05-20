@@ -43,7 +43,8 @@
     mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
     pointer-events: none;
     z-index: 0;
-    animation: gridShift 24s linear infinite;
+    /* grid is static now — animating background-position repainted the whole
+       screen every frame and tanked FPS. The glitchy theme still animates it. */
   }
   @keyframes gridShift {
     from { background-position: 0 0, 0 0; }
@@ -58,7 +59,8 @@
     );
     pointer-events: none;
     z-index: 1;
-    mix-blend-mode: screen;
+    /* mix-blend-mode: screen removed — full-screen blend was costly and the
+       scanlines are near-invisible (0.015 alpha) either way. */
   }
 
   /* ===== STYLE: NEON (default) — already styled above ===== */
