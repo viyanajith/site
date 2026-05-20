@@ -33,7 +33,7 @@
 <script>
   // Keep in sync with ad-gate.js
   const AD_INTERVAL_MIN = 1;
-  const KEY = 'vja-ad-next';
+  const KEY = 'vja-ad-left';   // seconds left until the next ad
   const WAIT_SEC = 5;
 
   // Where to send the user back — only allow same-origin (no open redirect).
@@ -57,7 +57,7 @@
     clearInterval(iv);
     status.textContent = 'Thanks! Returning…';
     // ONLY now — after the ad finishes — reset the timer, then go back.
-    try { localStorage.setItem(KEY, String(Date.now() + AD_INTERVAL_MIN * 60 * 1000)); } catch (e) {}
+    try { localStorage.setItem(KEY, String(AD_INTERVAL_MIN * 60)); } catch (e) {}
     location.replace(ret);
   }, 1000);
 </script>
