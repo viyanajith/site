@@ -35,8 +35,22 @@
     // Time's already up -> go watch the ad right now.
     if (now >= next) { goToAd(); return; }
 
-    // Otherwise, fire the ad the moment the timer runs out while on this page.
-    setTimeout(goToAd, next - now);
+    // Otherwise, tick once a second: print the countdown to the console and
+    // fire the ad the moment it reaches 0.
+    const tick = function () {
+      const remaining = Math.ceil((next - Date.now()) / 1000);
+      if (remaining <= 0) {
+        console.log('Ad timer: 0 — going to ad!');
+        goToAd();
+        return;
+      }
+      console.log('Ad timer: ' + remaining + 's left');
+    };
+    tick();                         // show the first number right away
+    const timerId = setInterval(tick, 1000);
+
+    // Stop ticking if the user leaves this page (avoids stray logs/redirects).
+    window.addEventListener('pagehide', function () { clearInterval(timerId); });
   } catch (e) {
     // localStorage blocked (private mode) — fail open, don't trap the user.
   }
