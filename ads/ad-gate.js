@@ -8,12 +8,20 @@
    skipped by going back; only finishing ad.html resets it.
    ========================================================= */
 (function () {
+  // Ad gating disabled globally.
+  const ADS_DISABLED = true;
+
   // ---- CONFIG ----
   const AD_INTERVAL_MIN = 1;   // TESTING: 1 minute.  For real: change to 15.
   const KEY = 'vja-ad-left';   // localStorage: seconds left until the next ad
   // ----------------
 
   const INTERVAL_SEC = AD_INTERVAL_MIN * 60;
+
+  if (ADS_DISABLED) {
+    console.log('Ad gate disabled. No ad redirect will occur.');
+    return;
+  }
 
   // ad.html lives next to this script, so resolve it relative to ourselves.
   // (Works whether the page is in / or /accounts/ etc.)
