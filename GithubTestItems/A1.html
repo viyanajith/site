@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Math Apocalypse — Zombie King</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#101820;color:white;font-family:Arial,sans-serif;text-align:center}
+h1{color:#55ff99;margin:12px}button{padding:12px 18px;margin:8px;background:#55ff99;border:0;border-radius:8px;font-size:16px;cursor:pointer}
+button:hover{background:#39cc77}#stats{display:flex;justify-content:center;gap:20px;flex-wrap:wrap;margin:12px}
+canvas{display:block;width:98%;max-width:1440px;height:auto;margin:10px auto;border:3px solid #55ff99;background:#203c30}
+#message{color:#ffdd55;min-height:24px}#startMenu{position:fixed;inset:0;background:#101820;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;overflow:auto;z-index:100}
+#startMenu h2{color:#ffdd55}.instructions{background:#263746;padding:12px 24px;border-radius:12px;text-align:left;max-width:550px}
+.instructions p{margin:9px 0}.difficultyButtons{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.difficultyButtons button{background:#263746;border:2px solid #55ff99;color:white;min-width:150px}
+.difficultyButtons small{color:#ffdd55}#questionBox,#endScreen{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#263746;border:3px solid #ffdd55;padding:25px;border-radius:12px;width:360px;max-width:92vw;z-index:110}
+#answer{padding:10px;font-size:20px;width:160px;text-align:center}#questionBox p{color:#ffdd55}
+#kingAnnouncement{display:none;position:fixed;top:38%;left:50%;transform:translate(-50%,-50%);z-index:90;background:#220000;color:#ff3333;border:4px solid #ffcc00;border-radius:15px;padding:28px 42px;font-size:clamp(22px,4vw,42px);font-weight:bold;text-shadow:0 0 15px red;box-shadow:0 0 40px #ff000088;pointer-events:none;width:max-content;max-width:92vw}
+</style>
+</head>
+<body>
+<div id="startMenu"><h1>🧟 MATH APOCALYPSE</h1><h2>How to Play</h2>
+<div class="instructions">
+<p>🎮 WASD / arrow keys — move</p><p>📘 Collect yellow books to solve decimal division.</p>
+<p>💪 Correct answer: +1 strength and +10 HP.</p><p>⚔️ SPACE: attack the nearest zombie in range (0.5s cooldown).</p>
+<p>🧟 Normal zombies give no rewards when defeated.</p><p>👑 Solve 5 sums to awaken the Zombie King. Keep solving more sums to gain strength, then defeat him to WIN!</p>
+<p>🛡️ The King has 2000 HP and is 2× bigger.</p>
+</div><h2>Select Difficulty</h2><div class="difficultyButtons">
+<button onclick="startGame(1)">🟢 Level 1<br><small>6.8 ÷ 3</small></button>
+<button onclick="startGame(2)">🟡 Level 2<br><small>1.5 ÷ 1.2</small></button>
+<button onclick="startGame(3)">🔴 Level 3<br><small>7.2 ÷ 0.6</small></button>
+</div></div>
+<h1>🧟 MATH APOCALYPSE</h1>
+<div id="stats"><span>❤️ HP: <b id="hp">100</b></span><span>⚔️ Strength: <b id="strength">1</b></span><span>💥 Damage: <b id="damage">20</b></span><span>🧟 Kills: <b id="kills">0</b></span><span>📘 Solved: <b id="solved">0</b> (5 to awaken)</span><span>🎯 Level: <b id="level">1</b></span><span>👑 King: <b id="kingStatus">Sleeping</b></span></div>
+<canvas id="game" width="1440" height="900"></canvas>
+<p id="message">Choose a difficulty to start!</p>
+<button onclick="restart()">Restart Game</button><button onclick="showMenu()">Change Difficulty</button>
+<div id="questionBox"><h2>📘 Math Challenge!</h2><h2 id="question"></h2><p>Exact answers only (maximum 3 decimal places). Never round!</p><input id="answer" type="number" step="any" placeholder="Answer"><br><button onclick="submitAnswer()">Submit</button></div>
+<div id="endScreen"><h1 id="endTitle"></h1><p id="endMessage"></p><button onclick="restart()">Play Again</button><button onclick="showMenu()">Change Difficulty</button></div>
+<div id="kingAnnouncement">👑 THE ZOMBIE KING HAS AWOKEN! 👑</div>
+<script>
+const canvas=document.getElementById("game"),ctx=canvas.getContext("2d");
+const WIDTH=1440,HEIGHT=900,GRID_SIZE=60,WIN_TARGET=5,ZOMBIE_MAX_HP=100,ATTACK_RANGE=80;
+const BOOK_COUNT=Math.round(WIDTH*HEIGHT/((9*GRID_SIZE)**2/6));
+let player,zombies=[],books=[],king=null,kills=0,solved=0,difficulty=1,gameStarted=false,paused=true,gameOver=false,currentAnswer=0,keys={},lastTime=0,zombieSpawnTimer=0,attackTimer=0,damageTimer=0,announcementTimer=null;
+const el=id=>document.getElementById(id);
+const random=(a,b)=>Math.random()*(b-a)+a;
+const randomInt=(a,b)=>Math.floor(random(a,b+1));
+const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+function hideAnnouncement(){clearTimeout(announcementTimer);el("kingAnnouncement").style.display="none";}
+function startGame(level){difficulty=level;gameStarted=true;el("startMenu").style.display="none";restart();}
+function showMenu(){paused=true;gameStarted=false;keys={};hideAnnouncement();el("questionBox").style.display="none";el("endScreen").style.display="none";el("startMenu").style.display="flex";}
+function restart(){
+ hideAnnouncement();player={x:WIDTH/2,y:HEIGHT/2,radius:13,speed:160,hp:100,strength:1};
+ zombies=[];books=[];king=null;kills=0;solved=0;paused=!gameStarted;gameOver=false;
+ zombieSpawnTimer=0;attackTimer=0;damageTimer=0;keys={};
+ el("questionBox").style.display="none";el("endScreen").style.display="none";
+ el("message").textContent="Solve 5 sums, then defeat the Zombie King!";
+ for(let i=0;i<BOOK_COUNT;i++)spawnBook();
+ for(let i=0;i<3;i++)spawnZombie();
+ updateStats();
+}
+function spawnBook(){
+ for(let i=0;i<100;i++){
+  const book={x:random(25,WIDTH-25),y:random(25,HEIGHT-25)};
+  if(distance(book,player)<65||books.some(b=>distance(book,b)<40))continue;
+  books.push(book);return;
+ }
+}
+function spawnZombie(){
+ const side=randomInt(0,3);
+ const z={x:side===0?0:side===1?WIDTH:random(0,WIDTH),y:side===2?0:side===3?HEIGHT:random(0,HEIGHT),radius:14,speed:45,hp:ZOMBIE_MAX_HP,maxHp:ZOMBIE_MAX_HP};
+ zombies.push(z);
+}
+function spawnKing(){
+ // Spawn far from the player, just outside the immediate combat area.
+ const corners=[{x:55,y:55},{x:WIDTH-55,y:55},{x:55,y:HEIGHT-55},{x:WIDTH-55,y:HEIGHT-55}];
+ corners.sort((a,b)=>distance(b,player)-distance(a,player));
+ const spot=corners[0];
+ king={x:spot.x,y:spot.y,radius:28,speed:35,hp:2000,maxHp:2000};
+ el("message").textContent="👑 The Zombie King has awoken! Defeat him to WIN!";
+ el("kingAnnouncement").style.display="block";
+ announcementTimer=setTimeout(()=>{el("kingAnnouncement").style.display="none";},3000);
+ updateStats();
+}
+document.addEventListener("keydown",e=>{
+ if(e.target.tagName==="INPUT")return;
+ if(e.code==="Space"||e.code.startsWith("Arrow"))e.preventDefault();
+ keys[e.key.toLowerCase()]=true;
+ if(e.code==="Space"&&!e.repeat)attackZombies();
+});
+document.addEventListener("keyup",e=>{keys[e.key.toLowerCase()]=false;});
+window.addEventListener("blur",()=>{keys={};});
+function movePlayer(dt){
+ let dx=0,dy=0;
+ if(keys.w||keys.arrowup)dy--;if(keys.s||keys.arrowdown)dy++;
+ if(keys.a||keys.arrowleft)dx--;if(keys.d||keys.arrowright)dx++;
+ const length=Math.hypot(dx,dy);
+ if(length){dx/=length;dy/=length;}
+ player.x=Math.max(player.radius,Math.min(WIDTH-player.radius,player.x+dx*player.speed*dt));
+ player.y=Math.max(player.radius,Math.min(HEIGHT-player.radius,player.y+dy*player.speed*dt));
+}
+function generateQuestion(){
+ // Reject and regenerate any division that does not terminate within 3 decimal places.
+ // Use integers throughout to avoid floating-point mistakes.
+ let found=false;
+ for(let attempt=0;attempt<10000;attempt++){
+  const dividendTenths=randomInt(10,199);
+  const divisorTenths=difficulty===1?randomInt(2,9)*10:
+                      difficulty===2?randomInt(10,99):randomInt(1,9);
+  // (dividendTenths/10) / (divisorTenths/10) = dividendTenths/divisorTenths
+  // An exact 3-decimal answer exists iff this division is integral.
+  const scaledNumerator=dividendTenths*1000;
+  if(scaledNumerator%divisorTenths!==0)continue; // REGENERATE!
+  const answerThousandths=scaledNumerator/divisorTenths;
+  currentAnswer=answerThousandths/1000;
+  el("question").textContent=(dividendTenths/10)+" ÷ "+(divisorTenths/10)+" = ?";
+  found=true;
+  break;
+ }
+ if(!found){ // Guaranteed exact fallback, even if random selection somehow fails.
+  currentAnswer=2.5;
+  el("question").textContent=difficulty===1?"7.5 ÷ 3 = ?":
+    difficulty===2?"3.0 ÷ 1.2 = ?":"1.5 ÷ 0.6 = ?";
+ }
+ el("answer").value="";
+ el("questionBox").style.display="block";
+ paused=true;keys={};el("answer").focus();
+}
+function submitAnswer(){
+ const input=el("answer");if(input.value.trim()==="")return;
+ const answer=Number(input.value);
+ if(Number.isFinite(answer)&&Math.abs(answer-currentAnswer)<0.0000001){
+  player.strength++;player.hp=Math.min(100,player.hp+10);solved++;
+  el("message").textContent="✅ Correct! Strength increased!";
+ }else{el("message").textContent="❌ Wrong! Answer: "+currentAnswer;}
+ el("questionBox").style.display="none";
+ paused=false;updateStats();
+ if(solved===WIN_TARGET&&!king)spawnKing();
+}
+el("answer").addEventListener("keydown",e=>{if(e.key==="Enter")submitAnswer();});
+function collectBooks(){
+ for(let i=books.length-1;i>=0;i--){
+  if(distance(player,books[i])<25){books.splice(i,1);spawnBook();generateQuestion();return;}
+ }
+}
+function moveEnemy(enemy,dt){
+ const dx=player.x-enemy.x,dy=player.y-enemy.y,length=Math.hypot(dx,dy);
+ if(length>0){enemy.x+=dx/length*enemy.speed*dt;enemy.y+=dy/length*enemy.speed*dt;}
+ if(distance(player,enemy)<player.radius+enemy.radius){
+  if(damageTimer<=0){
+   player.hp=Math.max(0,player.hp-(enemy===king?20:12));damageTimer=0.8;
+   if(player.hp<=0)endGame(false);
+  }
+ }
+}
+function updateEnemies(dt){
+ for(const z of zombies){moveEnemy(z,dt);if(gameOver)return;}
+ if(king)moveEnemy(king,dt);
+}
+function attackZombies(){
+ if(paused||gameOver||attackTimer>0)return;
+ let target=null,nearest=Infinity;
+ for(const enemy of [...zombies,...(king?[king]:[])]){
+  const d=distance(player,enemy);
+  if(d<ATTACK_RANGE&&d<nearest){target=enemy;nearest=d;}
+ }
+ if(!target)return;
+ target.hp-=player.strength*20;attackTimer=0.5;
+ if(target.hp<=0){
+  if(target===king){king=null;endGame(true);return;}
+  zombies.splice(zombies.indexOf(target),1);kills++;
+  el("message").textContent="💀 Zombie defeated!";
+ }else{
+  el("message").textContent=target===king?"👑 King hit! "+Math.ceil(target.hp)+" HP left":"⚔️ HIT! "+player.strength*20+" damage!";
+ }
+ updateStats();
+}
+function drawGrid(){
+ ctx.strokeStyle="#355847";ctx.lineWidth=1;
+ for(let x=0;x<=WIDTH;x+=GRID_SIZE){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,HEIGHT);ctx.stroke();}
+ for(let y=0;y<=HEIGHT;y+=GRID_SIZE){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(WIDTH,y);ctx.stroke();}
+}
+function drawPlayer(){
+ ctx.beginPath();ctx.arc(player.x,player.y,ATTACK_RANGE,0,Math.PI*2);ctx.strokeStyle="#55ff9955";ctx.stroke();
+ ctx.beginPath();ctx.arc(player.x,player.y,player.radius,0,Math.PI*2);ctx.fillStyle="#55ff99";ctx.fill();
+ ctx.fillStyle="#102018";ctx.fillRect(player.x-7,player.y-5,4,4);ctx.fillRect(player.x+3,player.y-5,4,4);
+}
+function drawEnemy(enemy,isKing){
+ ctx.beginPath();ctx.arc(enemy.x,enemy.y,enemy.radius,0,Math.PI*2);
+ ctx.fillStyle=isKing?"#9b4dce":"#dd5555";ctx.fill();
+ const scale=isKing?2:1;ctx.fillStyle="#330000";
+ ctx.fillRect(enemy.x-7*scale,enemy.y-4*scale,4*scale,4*scale);
+ ctx.fillRect(enemy.x+3*scale,enemy.y-4*scale,4*scale,4*scale);
+ const barWidth=isKing?80:34,barHeight=isKing?9:5,barX=enemy.x-barWidth/2,barY=enemy.y-enemy.radius-12;
+ const hpPercent=Math.max(0,enemy.hp/enemy.maxHp);
+ ctx.fillStyle="#333";ctx.fillRect(barX,barY,barWidth,barHeight);
+ ctx.fillStyle=hpPercent>.5?"#55ff55":hpPercent>.25?"#ffdd55":"#ff4444";
+ ctx.fillRect(barX,barY,barWidth*hpPercent,barHeight);
+ if(isKing){
+  ctx.font="32px Arial";ctx.textAlign="center";ctx.fillText("👑",enemy.x,enemy.y-enemy.radius-21);
+  ctx.font="bold 15px Arial";ctx.fillStyle="#ffdd55";ctx.fillText(Math.ceil(enemy.hp)+"/"+enemy.maxHp,enemy.x,barY-8);
+ }
+}
+function drawBooks(){
+ for(const b of books){ctx.fillStyle="#ffdd55";ctx.fillRect(b.x-11,b.y-12,22,24);ctx.fillStyle="#996600";ctx.fillRect(b.x-2,b.y-12,3,24);}
+}
+function updateStats(){
+ el("hp").textContent=Math.ceil(player.hp);el("strength").textContent=player.strength;
+ el("damage").textContent=player.strength*20;el("kills").textContent=kills;
+ el("solved").textContent=solved;el("level").textContent=difficulty;
+ el("kingStatus").textContent=king?Math.ceil(king.hp)+"/"+king.maxHp:solved>=WIN_TARGET?"Defeated":"Sleeping";
+}
+function endGame(won){
+ gameOver=true;paused=true;hideAnnouncement();el("questionBox").style.display="none";
+ el("endScreen").style.display="block";el("endTitle").textContent=won?"🏆 YOU WIN!":"💀 GAME OVER";
+ el("endMessage").textContent=won?"You solved all 5 sums and defeated the Zombie King! Normal zombies defeated: "+kills:
+ "You solved "+solved+" sums and defeated "+kills+" normal zombies.";
+ updateStats();
+}
+function gameLoop(timestamp){
+ const dt=Math.min((timestamp-lastTime)/1000||0,0.05);lastTime=timestamp;
+ if(!paused&&!gameOver){
+  movePlayer(dt);collectBooks();
+  if(!paused){
+   damageTimer=Math.max(0,damageTimer-dt);attackTimer=Math.max(0,attackTimer-dt);
+   updateEnemies(dt);
+   if(!gameOver){zombieSpawnTimer+=dt;if(zombieSpawnTimer>=6){zombieSpawnTimer=0;if(zombies.length<15)spawnZombie();}}
+  }
+  updateStats();
+ }
+ ctx.fillStyle="#203c30";ctx.fillRect(0,0,WIDTH,HEIGHT);
+ drawGrid();drawBooks();for(const z of zombies)drawEnemy(z,false);if(king)drawEnemy(king,true);drawPlayer();
+ requestAnimationFrame(gameLoop);
+}
+restart();requestAnimationFrame(gameLoop);
+</script>
+</body></html>

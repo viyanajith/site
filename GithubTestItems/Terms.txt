@@ -1,0 +1,2 @@
+This folder is when I want to test out something, and send it to Github. 
+This can also be a folder for temporary releases of software or DEBUG temporarily upload of software/
